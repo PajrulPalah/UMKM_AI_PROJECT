@@ -1,0 +1,101 @@
+﻿ID_UMKM,Business_Name,Province,City,Business_Sector,Business_Age,Number_of_Employees,Annual_Revenue,Digital_Sales_Percentage,Owner_Age,Owner_Gender,Education,Legal_Status,DC1,DC2,DC3,DC4,DC5,IC1,IC2,IC3,IC4,IC5,EO1,EO2,EO3,EO4,EO5,OA1,OA2,OA3,OA4,OA5,RA1,RA2,RA3,RA4,RA5,ED1,ED2,ED3,ED4,ED5,BR1,BR2,BR3,BR4,BR5,BR6,BR7
+UMKM-001,Usaha A1,Sulawesi Selatan,Maros,Teknologi & Digital,1.0,3,131567295,22.6,50,Laki-laki,SMA/SMK,Usaha Dagang (UD),2,2,2,2,2,2,2,2,1,2,3,3,3,3,3,2,1,1,1,1,2,2,2,2,2,3,2,4,4,3,1,1,1,1,1,1,1
+UMKM-002,Usaha B2,DKI Jakarta,Jakarta Selatan,Teknologi & Digital,4.3,11,23553881,31.5,35,Laki-laki,Diploma (D1-D3),PT,2,2,3,3,3,3,2,3,3,2,3,4,4,4,3,3,2,2,2,2,3,2,3,2,2,4,4,4,3,4,1,1,2,1,2,2,2
+UMKM-003,Usaha C3,Sumatera Utara,Binjai,Teknologi & Digital,7.1,1,9591596,15.9,44,Laki-laki,Sarjana (S1),PT,5,5,5,5,5,4,4,3,3,4,4,4,5,4,4,3,3,3,3,3,3,3,3,3,3,3,3,4,3,4,3,2,3,3,2,3,2
+UMKM-004,Usaha D4,Sulawesi Selatan,Gowa,Teknologi & Digital,11.7,3,899406421,51.2,52,Perempuan,SMA/SMK,Usaha Dagang (UD),4,5,4,4,4,3,4,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,2,3,3,4,4,3,4,4,4,3,3,3,3,3,3
+UMKM-005,Usaha E5,Jawa Timur,Malang,Teknologi & Digital,2.4,3,18247796,79.7,29,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,3,3,3,3,3,2,3,3,3,3,3,3,3,3,3,3,3,3,2,2,2,3,2,2,3,1,2,1,1,1,2,3,3,3,3,3,2
+UMKM-006,Usaha F6,Kalimantan Timur,Balikpapan,Perdagangan Eceran,1.5,6,17658877,39.6,42,Perempuan,Sarjana (S1),PT,2,2,2,2,3,2,3,3,3,2,2,3,2,3,3,2,2,3,2,3,3,2,2,2,2,4,3,4,4,4,2,2,2,2,2,2,2
+UMKM-007,Usaha G7,Sumatera Utara,Binjai,Perdagangan Eceran,7.5,1,6417287,69.0,35,Perempuan,SMA/SMK,Usaha Dagang (UD),5,3,4,5,5,5,4,4,4,4,4,3,3,4,4,4,3,3,5,3,3,3,2,3,3,1,3,2,3,2,4,4,4,3,3,4,3
+UMKM-008,Usaha H8,Sumatera Utara,Pematangsiantar,Kerajinan Tangan,9.9,1,28930854,76.0,30,Perempuan,Sarjana (S1),Tidak Berbadan Hukum,4,3,3,4,3,3,3,2,3,3,2,2,2,2,2,2,2,3,2,2,2,2,2,2,1,4,3,3,3,3,2,2,2,2,1,2,2
+UMKM-009,Usaha I9,Sulawesi Selatan,Maros,Manufaktur,2.6,2,17940263,24.2,26,Perempuan,SMA/SMK,PT,5,3,4,4,4,4,3,3,4,4,3,3,2,2,2,3,3,3,3,3,2,2,2,3,2,4,3,3,3,2,2,2,2,2,2,3,2
+UMKM-010,Usaha J10,Jawa Tengah,Solo,Fashion & Tekstil,0.6,6,320462337,57.0,30,Laki-laki,Magister (S2),PT,4,4,4,4,4,4,4,4,4,5,2,1,2,2,2,3,3,2,3,3,3,4,3,4,3,5,5,5,5,5,4,3,3,3,3,3,3
+UMKM-011,Usaha K11,Jawa Timur,Sidoarjo,Jasa & Konsultasi,16.9,1,48747837,32.9,42,Perempuan,Diploma (D1-D3),PT,1,1,2,1,1,1,2,2,2,2,3,4,3,4,3,1,1,1,1,1,1,2,1,1,1,4,4,4,3,3,1,1,1,1,1,1,1
+UMKM-012,Usaha L12,Sulawesi Selatan,Makassar,Teknologi & Digital,3.0,3,39403420,42.7,25,Laki-laki,SMA/SMK,PT,2,2,2,1,2,2,2,1,1,2,3,2,3,2,3,2,2,2,2,2,2,2,2,2,2,2,3,4,3,2,2,2,2,2,2,2,2
+UMKM-013,Usaha M13,Jawa Timur,Malang,Kuliner,4.4,6,33881940,17.7,36,Laki-laki,Diploma (D1-D3),Usaha Dagang (UD),3,4,5,3,4,2,2,3,2,2,3,3,4,3,3,3,3,2,3,2,2,2,2,2,2,1,2,2,1,1,2,3,1,2,2,3,2
+UMKM-014,Usaha N14,Jawa Timur,Surabaya,Jasa & Konsultasi,10.9,11,102298943,53.4,50,Perempuan,Diploma (D1-D3),Koperasi,2,2,2,2,1,2,1,2,1,2,4,4,3,4,4,1,1,1,1,1,1,1,2,2,1,2,3,3,3,3,1,1,1,1,1,1,1
+UMKM-015,Usaha O15,Kalimantan Timur,Samarinda,Perdagangan Eceran,6.8,5,23143076,47.8,46,Perempuan,Sarjana (S1),Tidak Berbadan Hukum,2,2,2,2,2,1,2,2,2,1,2,2,2,3,3,2,2,2,1,2,2,3,2,2,2,4,4,4,3,4,1,1,1,1,2,1,1
+UMKM-016,Usaha P16,Sumatera Utara,Binjai,Kuliner,8.0,6,88689078,38.4,36,Perempuan,Sarjana (S1),Usaha Dagang (UD),5,5,4,5,5,4,3,3,4,4,2,1,2,2,2,4,3,4,4,4,3,3,2,3,3,2,3,3,3,3,3,3,3,3,3,2,4
+UMKM-017,Usaha Q17,DKI Jakarta,Jakarta Barat,Kuliner,1.4,17,276235351,58.1,58,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,4,4,3,4,3,3,3,2,3,2,2,3,3,2,3,2,2,2,2,2,2,2,2,2,1,3,3,2,2,1,2,2,2,2,2,1,2
+UMKM-018,Usaha R18,Kalimantan Timur,Samarinda,Kuliner,4.7,6,69170844,25.3,60,Laki-laki,SMA/SMK,CV,4,4,4,4,5,4,4,3,3,3,4,3,4,4,4,3,3,3,3,3,3,2,3,3,3,3,3,3,2,3,3,3,3,2,3,2,2
+UMKM-019,Usaha S19,Kalimantan Timur,Balikpapan,Kerajinan Tangan,7.1,6,29512440,16.8,42,Perempuan,SMA/SMK,CV,3,3,4,4,3,3,2,2,3,2,2,1,2,2,1,3,3,2,2,2,1,1,2,2,2,4,4,4,3,4,1,1,1,1,1,1,2
+UMKM-020,Usaha T20,Jawa Timur,Surabaya,Perdagangan Eceran,1.6,1,12683962,64.5,20,Laki-laki,SMA/SMK,CV,3,3,3,3,3,3,4,3,3,3,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,3,3,4,3,3,2,2,2,2,2,2
+UMKM-021,Usaha U21,Bali,Denpasar,Kuliner,1.2,3,28626723,12.0,50,Perempuan,Sarjana (S1),CV,2,1,1,2,2,1,2,2,2,2,3,3,3,3,3,1,1,1,1,1,1,2,1,2,2,4,5,4,4,4,1,1,1,1,1,2,1
+UMKM-022,Usaha V22,Sumatera Utara,Medan,Teknologi & Digital,24.2,4,78271542,45.1,20,Perempuan,Magister (S2),Usaha Dagang (UD),2,3,2,2,3,2,1,2,1,2,3,3,3,3,4,1,2,2,2,2,2,3,1,2,2,1,3,3,2,2,1,1,1,1,1,1,1
+UMKM-023,Usaha W23,Jawa Tengah,Semarang,Pertanian & Pangan,4.4,9,6330990,48.1,56,Laki-laki,Diploma (D1-D3),PT,3,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,3,2,3,2,2,2,2,3,2,4,4,3,3,4,2,2,2,2,1,2,2
+UMKM-024,Usaha X24,Kalimantan Timur,Bontang,Kuliner,1.8,13,108022630,28.7,52,Laki-laki,SMA/SMK,PT,3,3,3,2,3,2,3,2,3,3,3,3,3,3,3,2,2,3,3,3,2,2,2,2,2,3,3,2,3,3,2,2,2,2,2,1,1
+UMKM-025,Usaha Y25,DKI Jakarta,Jakarta Pusat,Kerajinan Tangan,30.0,3,51091833,33.4,59,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,4,4,4,4,4,3,4,4,4,4,4,5,5,5,4,3,3,3,3,3,3,3,3,4,3,3,3,3,3,3,3,3,4,3,3,3,3
+UMKM-026,Usaha Z26,Bali,Denpasar,Jasa & Konsultasi,20.2,3,33296838,36.3,44,Laki-laki,Sarjana (S1),Usaha Dagang (UD),3,3,3,3,3,3,2,2,2,2,3,2,2,2,2,1,2,2,2,2,2,2,1,1,1,3,3,3,3,3,1,1,1,1,1,2,1
+UMKM-027,Usaha A27,Bali,Denpasar,Perdagangan Eceran,4.9,4,18050860,11.6,38,Perempuan,Sarjana (S1),Usaha Dagang (UD),3,4,2,3,3,2,3,2,2,2,4,4,4,4,3,2,2,1,3,2,3,3,2,3,2,3,3,4,4,3,1,1,1,1,1,2,1
+UMKM-028,Usaha B28,Jawa Tengah,Yogyakarta,Manufaktur,12.9,3,22484725,24.1,37,Laki-laki,Magister (S2),Koperasi,3,3,3,3,2,2,2,3,2,2,3,3,2,2,3,2,2,2,2,2,1,1,2,2,1,3,3,4,3,3,1,1,2,2,2,2,1
+UMKM-029,Usaha C29,Kalimantan Timur,Samarinda,Kerajinan Tangan,1.3,6,81553291,67.7,36,Perempuan,SMA/SMK,Tidak Berbadan Hukum,2,2,2,1,2,3,3,3,3,3,5,3,4,4,4,2,2,2,2,2,1,1,1,1,1,2,3,2,2,2,2,1,2,1,2,2,1
+UMKM-030,Usaha D30,DKI Jakarta,Jakarta Pusat,Kuliner,2.0,1,34145664,61.0,51,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,3,3,3,3,3,2,3,2,2,2,3,4,4,3,4,2,2,1,2,2,2,2,2,2,1,2,2,2,3,2,2,2,2,2,2,1,2
+UMKM-031,Usaha E31,Sumatera Utara,Pematangsiantar,Perdagangan Eceran,7.2,4,21826426,19.7,49,Perempuan,Magister (S2),Tidak Berbadan Hukum,1,2,2,1,2,2,2,2,2,2,3,3,4,3,3,2,2,1,2,3,1,2,1,2,2,5,4,4,5,5,1,1,1,1,1,1,2
+UMKM-032,Usaha F32,Jawa Barat,Bogor,Pertanian & Pangan,11.3,1,69879032,19.2,43,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,2,2,3,2,3,2,1,2,1,1,2,1,2,1,2,1,1,1,1,2,1,1,2,2,1,2,3,2,3,2,1,1,1,1,1,2,1
+UMKM-033,Usaha G33,DKI Jakarta,Jakarta Barat,Kuliner,11.6,1,73282158,33.0,34,Laki-laki,Diploma (D1-D3),CV,2,2,2,2,2,2,1,1,2,1,2,2,2,2,2,1,1,1,2,1,2,1,2,2,2,4,3,3,5,3,1,2,1,1,1,1,1
+UMKM-034,Usaha H34,Jawa Tengah,Semarang,Kerajinan Tangan,3.1,6,8894911,69.4,68,Laki-laki,Sarjana (S1),Usaha Dagang (UD),3,2,3,3,2,3,2,2,3,3,3,2,2,2,2,2,2,3,2,2,2,2,2,2,3,3,4,3,4,4,3,2,2,2,3,2,2
+UMKM-035,Usaha I35,Bali,Gianyar,Fashion & Tekstil,13.1,7,79064682,24.5,51,Perempuan,Sarjana (S1),CV,4,4,4,4,4,4,4,3,4,4,3,3,3,2,2,3,3,3,3,3,2,3,2,3,3,3,3,4,3,3,2,2,2,2,2,3,2
+UMKM-036,Usaha J36,Sumatera Utara,Pematangsiantar,Teknologi & Digital,11.4,1,801533924,61.1,26,Perempuan,Sarjana (S1),Tidak Berbadan Hukum,3,2,2,3,3,3,3,3,2,2,3,3,3,4,2,1,1,2,1,2,1,2,1,1,1,3,4,4,3,4,1,1,1,1,1,2,1
+UMKM-037,Usaha K37,DKI Jakarta,Jakarta Pusat,Manufaktur,16.5,7,69967747,18.9,36,Perempuan,Sarjana (S1),Tidak Berbadan Hukum,2,2,3,2,2,2,3,2,2,3,3,3,4,3,3,1,2,2,2,2,1,1,1,1,2,4,4,3,4,4,2,2,1,2,1,1,2
+UMKM-038,Usaha L38,Jawa Barat,Bogor,Jasa & Konsultasi,9.2,2,5184538,28.9,51,Laki-laki,Diploma (D1-D3),Tidak Berbadan Hukum,4,3,4,3,4,2,2,2,3,3,3,4,3,2,2,2,3,3,2,3,2,2,3,2,2,1,2,1,1,1,2,2,2,2,3,2,3
+UMKM-039,Usaha M39,Jawa Barat,Bandung,Kerajinan Tangan,6.6,4,49271208,70.0,34,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,2,2,2,1,2,2,1,2,2,2,3,3,3,3,3,2,1,1,2,2,1,1,1,1,1,3,2,3,3,3,1,1,1,1,1,1,2
+UMKM-040,Usaha N40,Jawa Timur,Malang,Perdagangan Eceran,5.2,7,5000000,19.2,45,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,3,4,4,4,4,3,2,2,3,2,4,4,3,4,4,3,3,3,2,3,3,3
+UMKM-041,Usaha O41,Jawa Timur,Sidoarjo,Manufaktur,2.8,8,1781721745,9.2,51,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,3,4,4,4,4,5,3,3,3,3,2,3,2
+UMKM-042,Usaha P42,Sulawesi Selatan,Gowa,Manufaktur,16.9,11,582482455,12.1,20,Laki-laki,Sarjana (S1),Koperasi,3,3,3,2,3,2,3,3,3,3,2,2,1,2,2,2,3,2,2,2,1,2,2,2,2,3,3,3,3,3,2,1,2,2,1,1,2
+UMKM-043,Usaha Q43,Jawa Tengah,Semarang,Manufaktur,21.8,6,17910072,56.9,40,Perempuan,Sarjana (S1),Usaha Dagang (UD),4,3,3,4,4,3,3,3,3,3,3,3,4,3,4,3,3,3,3,3,3,3,3,2,3,2,3,2,2,3,3,3,2,3,3,3,3
+UMKM-044,Usaha R44,Kalimantan Timur,Bontang,Kuliner,2.0,3,5000000,15.2,41,Perempuan,SD/SMP,CV,3,2,2,2,2,1,2,1,2,2,2,2,2,2,2,1,1,1,2,1,1,1,1,1,1,2,2,2,2,2,1,2,2,1,1,1,2
+UMKM-045,Usaha S45,DKI Jakarta,Jakarta Pusat,Teknologi & Digital,2.2,2,13879931,21.3,37,Perempuan,Sarjana (S1),CV,3,4,4,4,4,3,3,3,4,3,4,4,4,4,3,2,2,2,2,2,3,3,3,3,2,4,4,4,4,4,3,2,3,3,2,2,3
+UMKM-046,Usaha T46,DKI Jakarta,Jakarta Selatan,Kuliner,4.0,1,32050108,24.3,45,Perempuan,Sarjana (S1),Koperasi,2,3,3,3,3,2,2,3,3,3,3,3,3,2,3,3,2,3,3,3,3,4,3,3,3,3,3,3,3,2,2,2,2,2,2,2,1
+UMKM-047,Usaha U47,Kalimantan Timur,Samarinda,Perdagangan Eceran,3.6,5,5000000,7.7,48,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,4,5,5,5,5,4,4,4,4,4,3,4,4,4,4,4,3,3,4,3,4,3,3,2,3,3,3,3,3,3,3,3,3,3,3,4,3
+UMKM-048,Usaha V48,Sulawesi Selatan,Maros,Kuliner,30.0,4,36659126,34.5,43,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,2,2,2,3,2,3,3,3,3,2,3,3,3,3,5,1,2,2,3,2,3,3,3,3,3,4,3,3,3,3,1,1,2,1,1,1,1
+UMKM-049,Usaha W49,Bali,Gianyar,Fashion & Tekstil,1.2,2,31797734,39.2,38,Laki-laki,Sarjana (S1),Usaha Dagang (UD),3,3,3,3,3,3,2,3,3,3,4,4,4,4,4,2,2,3,3,2,2,3,3,3,2,1,1,1,1,1,2,2,2,2,2,2,2
+UMKM-050,Usaha X50,Bali,Badung,Teknologi & Digital,0.5,6,46278388,34.3,48,Perempuan,Diploma (D1-D3),Tidak Berbadan Hukum,4,4,4,3,4,3,2,2,3,2,3,3,3,4,4,3,2,2,2,2,2,2,2,2,2,5,5,5,4,5,2,1,1,2,2,2,2
+UMKM-051,Usaha Y51,Sulawesi Selatan,Makassar,Teknologi & Digital,4.1,5,52460665,54.8,42,Laki-laki,Sarjana (S1),PT,1,2,1,2,1,2,1,2,2,2,4,4,4,4,4,1,2,1,2,1,2,3,3,2,2,2,3,2,2,2,2,1,2,1,1,1,1
+UMKM-052,Usaha Z52,Bali,Gianyar,Perdagangan Eceran,1.2,13,12500245,9.2,39,Laki-laki,SMA/SMK,PT,2,2,2,3,3,4,3,3,3,3,5,4,4,4,4,3,4,3,3,3,3,3,3,3,2,4,3,4,4,3,3,2,3,2,3,3,3
+UMKM-053,Usaha A53,Jawa Timur,Malang,Jasa & Konsultasi,2.7,4,14301902,18.4,28,Laki-laki,Diploma (D1-D3),CV,4,4,4,4,4,3,4,3,3,4,3,4,3,4,3,3,3,3,3,4,2,2,1,2,1,2,1,2,2,1,3,3,3,2,3,2,3
+UMKM-054,Usaha B54,DKI Jakarta,Jakarta Barat,Fashion & Tekstil,8.2,11,42064326,37.9,26,Laki-laki,Sarjana (S1),CV,4,5,5,4,4,4,4,3,4,3,2,3,3,3,3,4,4,4,3,3,3,3,3,3,3,3,2,3,2,3,3,3,4,3,3,3,3
+UMKM-055,Usaha C55,Sulawesi Selatan,Maros,Kerajinan Tangan,7.7,5,18677113,20.3,28,Perempuan,Sarjana (S1),Koperasi,2,2,2,2,2,2,3,2,3,3,4,4,3,3,4,1,2,2,2,2,1,2,1,2,1,5,4,4,4,3,2,2,2,2,2,2,2
+UMKM-056,Usaha D56,DKI Jakarta,Jakarta Pusat,Kuliner,2.2,6,118330690,72.2,44,Perempuan,SMA/SMK,Tidak Berbadan Hukum,4,4,4,4,4,4,3,4,4,4,3,3,4,2,3,3,2,3,2,3,2,2,2,2,3,2,1,3,1,1,4,3,3,3,3,3,3
+UMKM-057,Usaha E57,Kalimantan Timur,Bontang,Pertanian & Pangan,4.7,1,41577655,39.4,41,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,5,5,4,5,5,5,4,5,4,4,4,4,4,3,4,4,4,4,4,5,3,3,3,4,3,3,4,3,3,4,4,3,4,4,4,4,3
+UMKM-058,Usaha F58,Jawa Barat,Bandung,Kuliner,4.3,8,373341415,47.2,27,Perempuan,Sarjana (S1),PT,5,4,5,4,5,4,4,3,4,4,2,3,4,3,2,4,4,3,4,4,3,3,3,3,3,2,3,3,3,3,4,4,3,4,3,4,3
+UMKM-059,Usaha G59,Jawa Timur,Sidoarjo,Manufaktur,6.1,4,106598385,5.0,48,Perempuan,SD/SMP,CV,1,2,1,2,2,2,2,2,1,1,3,3,3,3,3,2,1,1,2,1,2,2,2,2,2,3,3,4,4,4,1,1,1,1,1,1,1
+UMKM-060,Usaha H60,Sumatera Utara,Binjai,Kuliner,1.7,7,149746832,58.6,55,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,4,4,4,4,4,2,2,2,3,3,2,2,2,2,2,2,2,2,2,3,3,2,2,2,3,4,3,4,4,4,2,3,3,3,3,2,3
+UMKM-061,Usaha I61,Jawa Timur,Sidoarjo,Kerajinan Tangan,5.3,8,46691807,41.3,36,Laki-laki,SD/SMP,Usaha Dagang (UD),2,3,2,3,3,2,2,2,2,2,2,2,1,2,3,1,1,1,2,2,1,1,1,1,1,5,3,3,3,4,1,1,1,1,1,1,1
+UMKM-062,Usaha J62,Sulawesi Selatan,Makassar,Kuliner,23.1,1,48101975,56.1,24,Laki-laki,SMA/SMK,CV,5,5,5,4,5,4,4,4,3,4,2,3,2,2,2,5,4,4,4,4,3,3,3,3,3,2,1,2,3,3,3,3,3,3,3,3,3
+UMKM-063,Usaha K63,Sumatera Utara,Medan,Fashion & Tekstil,4.0,11,318007236,22.1,34,Laki-laki,SMA/SMK,Koperasi,3,4,2,3,3,3,2,2,3,3,2,2,2,2,2,3,3,2,2,3,3,2,3,2,2,2,3,3,3,2,2,2,3,2,2,2,3
+UMKM-064,Usaha L64,Jawa Barat,Bekasi,Fashion & Tekstil,14.2,7,25293260,79.4,50,Perempuan,Diploma (D1-D3),Koperasi,2,2,2,1,1,3,3,3,3,3,4,4,4,3,3,3,2,2,2,2,2,3,3,3,2,1,2,2,2,2,2,2,2,2,2,2,2
+UMKM-065,Usaha M65,Sulawesi Selatan,Maros,Teknologi & Digital,3.4,5,76755470,86.8,47,Laki-laki,Diploma (D1-D3),PT,3,4,4,3,4,3,3,3,4,3,3,3,3,3,3,3,3,3,3,4,4,3,4,4,3,3,3,3,4,4,3,3,3,3,3,3,3
+UMKM-066,Usaha N66,Jawa Tengah,Yogyakarta,Perdagangan Eceran,2.6,10,28933624,33.3,32,Perempuan,Magister (S2),CV,2,2,3,3,3,2,2,3,3,3,4,4,4,4,4,2,2,3,2,2,3,3,2,3,2,5,5,4,5,5,2,2,2,2,2,2,3
+UMKM-067,Usaha O67,DKI Jakarta,Jakarta Selatan,Jasa & Konsultasi,6.2,14,28850466,49.5,57,Laki-laki,Sarjana (S1),Usaha Dagang (UD),5,5,5,5,5,4,4,3,4,4,2,2,2,2,3,4,4,4,4,4,3,3,3,3,3,1,1,2,1,2,3,4,3,3,3,3,3
+UMKM-068,Usaha P68,Jawa Barat,Bogor,Pertanian & Pangan,6.6,4,9794430,9.9,55,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,5,5,4,5,5,4,4,3,4,4,3,3,2,3,3,4,3,3,3,4,4,5,4,4,4,2,3,4,2,3,3,3,4,3,3,4,4
+UMKM-069,Usaha Q69,DKI Jakarta,Jakarta Barat,Manufaktur,12.0,4,16337649,59.6,34,Laki-laki,SMA/SMK,PT,4,5,4,4,5,3,3,2,3,3,3,3,3,4,3,2,2,3,2,3,2,2,1,2,2,3,2,2,2,3,2,2,2,2,2,2,2
+UMKM-070,Usaha R70,Bali,Denpasar,Kuliner,1.6,2,13073223,20.2,34,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,1,2,1,2,2,2,2,1,2,2,3,3,3,3,3,1,2,2,1,2,2,3,2,2,2,3,4,3,3,3,2,2,1,2,2,2,2
+UMKM-071,Usaha S71,Jawa Tengah,Yogyakarta,Kuliner,4.1,1,81266348,35.5,36,Laki-laki,Sarjana (S1),CV,4,4,3,4,3,4,4,5,4,4,3,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,3,3,3,3,3,3,3
+UMKM-072,Usaha T72,Jawa Tengah,Yogyakarta,Kerajinan Tangan,5.1,7,138758714,14.8,36,Perempuan,SMA/SMK,CV,2,2,1,2,2,1,2,1,1,2,4,3,3,3,4,2,2,1,1,2,2,3,3,2,3,3,1,3,4,4,1,1,1,1,2,1,1
+UMKM-073,Usaha U73,Jawa Barat,Bekasi,Perdagangan Eceran,8.8,1,35544498,65.4,51,Laki-laki,Diploma (D1-D3),Usaha Dagang (UD),2,2,1,1,1,1,2,1,1,1,4,4,4,4,4,1,1,1,1,2,1,1,1,2,1,3,2,3,2,2,1,1,1,1,1,1,1
+UMKM-074,Usaha V74,Jawa Tengah,Solo,Fashion & Tekstil,0.5,3,52459579,21.6,46,Perempuan,Sarjana (S1),Usaha Dagang (UD),4,4,5,4,5,4,4,4,5,4,4,3,3,3,3,3,3,3,4,4,3,2,2,2,2,5,4,3,3,4,3,3,3,3,3,2,3
+UMKM-075,Usaha W75,Sumatera Utara,Medan,Pertanian & Pangan,30.0,7,33165952,18.8,50,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,2,2,2,2,2,2,2,2,2,2,3,3,3,2,4,2,2,2,1,2,3,1,1,2,2,4,3,4,4,3,1,1,1,2,1,1,1
+UMKM-076,Usaha X76,Jawa Tengah,Yogyakarta,Teknologi & Digital,3.8,4,15052714,41.3,48,Laki-laki,SD/SMP,Tidak Berbadan Hukum,2,3,3,2,2,3,3,3,2,3,5,4,3,4,5,3,2,3,2,3,3,2,2,2,2,4,3,4,3,4,2,2,2,2,2,2,2
+UMKM-077,Usaha Y77,DKI Jakarta,Jakarta Barat,Fashion & Tekstil,2.0,1,112079122,26.2,59,Laki-laki,Diploma (D1-D3),PT,5,5,5,5,5,4,4,3,4,4,2,3,2,2,3,3,4,4,3,3,4,3,4,3,4,3,3,3,3,4,3,4,3,3,3,3,3
+UMKM-078,Usaha Z78,DKI Jakarta,Jakarta Barat,Manufaktur,12.9,12,87141311,85.2,31,Perempuan,Sarjana (S1),CV,2,2,2,3,2,2,3,3,2,2,4,3,3,3,3,2,2,2,2,2,2,2,2,3,2,4,4,4,4,3,2,1,1,2,1,1,2
+UMKM-079,Usaha A79,Sulawesi Selatan,Makassar,Perdagangan Eceran,8.3,7,5000000,19.5,45,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,3,2,2,2,2,2,3,2,3,2,4,4,4,3,3,2,3,2,1,2,2,2,2,2,2,2,2,3,2,3,1,2,2,2,2,1,2
+UMKM-080,Usaha B80,DKI Jakarta,Jakarta Pusat,Manufaktur,18.4,4,28353731,15.3,20,Laki-laki,Sarjana (S1),PT,5,5,5,5,4,3,4,4,4,4,3,3,2,2,3,3,4,3,4,3,3,2,3,3,3,2,3,2,2,2,3,3,3,3,3,3,3
+UMKM-081,Usaha C81,Sulawesi Selatan,Gowa,Jasa & Konsultasi,2.4,8,13819168,26.1,28,Perempuan,Sarjana (S1),CV,2,2,2,2,2,3,3,3,3,2,3,3,3,3,2,2,3,2,2,1,2,2,2,3,3,3,4,3,4,4,2,2,2,2,2,2,2
+UMKM-082,Usaha D82,DKI Jakarta,Jakarta Pusat,Teknologi & Digital,4.8,6,24912337,43.9,41,Laki-laki,Doktor (S3),Usaha Dagang (UD),4,4,4,4,4,2,2,2,3,2,2,2,2,2,2,2,2,2,3,2,3,3,3,3,3,2,2,1,1,2,3,3,2,3,2,2,2
+UMKM-083,Usaha E83,Sumatera Utara,Pematangsiantar,Jasa & Konsultasi,5.1,2,17813766,23.2,46,Laki-laki,SMA/SMK,Tidak Berbadan Hukum,5,5,4,5,5,5,5,4,5,4,4,3,4,4,5,4,4,4,4,4,3,3,3,2,3,2,3,3,3,3,3,3,3,3,3,3,3
+UMKM-084,Usaha F84,Kalimantan Timur,Bontang,Kerajinan Tangan,23.6,5,37667023,53.1,40,Laki-laki,Sarjana (S1),CV,5,4,5,5,4,4,4,4,3,4,3,3,4,3,3,2,4,3,3,3,2,2,2,3,2,3,3,3,3,3,3,3,2,3,3,2,3
+UMKM-085,Usaha G85,Sulawesi Selatan,Makassar,Manufaktur,0.5,8,26805089,42.8,36,Perempuan,Sarjana (S1),CV,4,4,4,3,3,3,3,3,3,4,3,3,3,3,4,3,3,3,3,2,3,3,2,3,3,2,2,2,2,2,2,2,3,3,3,3,3
+UMKM-086,Usaha H86,Jawa Timur,Sidoarjo,Kerajinan Tangan,2.2,2,26130954,10.4,38,Perempuan,Diploma (D1-D3),Koperasi,2,3,2,1,2,2,2,2,3,2,3,3,2,3,2,2,2,2,2,1,2,2,2,2,2,2,3,2,2,2,2,1,1,2,2,2,1
+UMKM-087,Usaha I87,Bali,Gianyar,Kuliner,1.3,2,150408594,40.8,55,Laki-laki,SMA/SMK,CV,3,1,2,2,2,2,2,2,2,1,3,3,3,4,3,3,2,2,3,2,1,1,1,2,1,3,3,3,3,3,1,1,2,2,2,2,2
+UMKM-088,Usaha J88,Jawa Barat,Bandung,Jasa & Konsultasi,1.9,6,77719316,28.9,38,Laki-laki,Sarjana (S1),PT,4,4,4,4,5,4,4,4,4,3,3,4,3,3,3,3,3,3,3,2,3,2,3,3,2,4,4,4,4,4,2,3,3,2,3,3,2
+UMKM-089,Usaha K89,DKI Jakarta,Jakarta Pusat,Perdagangan Eceran,4.0,16,17112614,64.1,59,Perempuan,SMA/SMK,Tidak Berbadan Hukum,4,5,4,5,5,3,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,2,2,3,2,3,3,2
+UMKM-090,Usaha L90,Jawa Tengah,Yogyakarta,Manufaktur,2.8,5,20446942,37.9,49,Perempuan,Diploma (D1-D3),Koperasi,3,3,3,3,3,2,2,2,2,3,3,4,4,3,3,2,2,3,2,2,1,2,2,2,1,4,4,4,4,4,2,2,2,2,2,2,2
+UMKM-091,Usaha M91,Kalimantan Timur,Bontang,Pertanian & Pangan,3.0,9,71854346,5.0,46,Laki-laki,SMA/SMK,CV,2,2,2,1,3,2,2,2,2,2,2,2,2,2,1,1,2,2,2,1,3,2,3,2,3,3,3,3,3,2,2,1,2,2,1,2,2
+UMKM-092,Usaha N92,DKI Jakarta,Jakarta Barat,Teknologi & Digital,11.2,2,71736015,7.9,30,Perempuan,Sarjana (S1),Tidak Berbadan Hukum,2,2,1,2,2,3,2,2,2,2,3,3,3,3,3,2,2,2,2,2,2,1,2,1,2,4,4,5,3,4,1,2,2,1,1,1,1
+UMKM-093,Usaha O93,Jawa Tengah,Solo,Fashion & Tekstil,16.0,1,19297067,51.8,51,Laki-laki,Sarjana (S1),PT,1,2,2,2,2,1,2,2,2,2,3,3,3,2,3,2,1,2,2,1,2,2,2,2,2,2,2,3,2,2,1,2,1,2,2,2,1
+UMKM-094,Usaha P94,Bali,Badung,Perdagangan Eceran,0.5,4,30075191,13.2,37,Laki-laki,Sarjana (S1),Tidak Berbadan Hukum,4,4,4,4,3,4,3,4,4,4,4,5,4,4,4,3,3,3,2,3,2,2,3,2,2,3,2,3,3,2,2,3,3,3,3,3,2
+UMKM-095,Usaha Q95,Bali,Badung,Perdagangan Eceran,1.4,8,365277263,44.0,30,Perempuan,SMA/SMK,Tidak Berbadan Hukum,2,3,3,3,2,3,2,3,3,3,2,2,2,2,2,3,2,2,3,2,2,2,3,2,2,3,3,3,4,3,2,2,2,2,2,2,2
+UMKM-096,Usaha R96,Bali,Denpasar,Kerajinan Tangan,6.7,5,19700258,10.3,47,Laki-laki,SMA/SMK,Usaha Dagang (UD),5,5,5,5,5,4,4,4,5,4,3,2,3,4,3,3,4,3,4,4,2,3,3,3,2,3,3,4,4,2,4,3,4,3,4,4,4
+UMKM-097,Usaha S97,Jawa Tengah,Solo,Jasa & Konsultasi,2.7,1,394435231,35.2,28,Perempuan,Sarjana (S1),CV,4,4,3,4,4,3,3,4,3,3,3,3,3,3,3,2,2,2,1,2,2,1,1,1,2,3,4,4,4,4,2,2,2,2,2,2,2
+UMKM-098,Usaha T98,DKI Jakarta,Jakarta Pusat,Manufaktur,1.8,10,149738400,35.1,34,Perempuan,Diploma (D1-D3),PT,2,1,2,2,1,3,3,3,3,3,5,5,5,4,4,3,2,2,3,3,3,2,2,2,2,1,1,1,1,1,2,2,2,2,2,2,2
+UMKM-099,Usaha U99,Bali,Denpasar,Manufaktur,2.1,6,315762065,5.1,41,Perempuan,SMA/SMK,Tidak Berbadan Hukum,4,4,4,3,4,3,3,3,4,3,2,2,3,3,3,3,3,3,2,3,4,3,3,4,3,5,5,5,5,4,2,2,2,2,2,2,2
+UMKM-100,Usaha V100,Sumatera Utara,Binjai,Kuliner,2.3,1,18720198,17.3,64,Laki-laki,Sarjana (S1),Koperasi,3,3,3,3,3,2,3,3,3,3,2,2,2,2,2,2,2,2,2,3,2,1,2,1,2,4,4,4,4,4,2,2,2,1,2,2,2
