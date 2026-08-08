@@ -620,7 +620,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.caption("v2.0.0 | UMKM AI Research | 2025")
+    st.caption("v2.0.0 | UMKM AI Research | 2026")
 
 
 # ══════════════════════════════════════════════════════════

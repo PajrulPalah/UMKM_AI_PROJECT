@@ -1,7 +1,7 @@
 # ============================================================
 # gemini_helper.py
 # Google Gemini AI Integration untuk UMKM Resilience System
-# Model: gemini-1.5-flash (gratis, cepat)
+# Model: gemini-3.5-flash (gratis, cepat)
 # ============================================================
 
 import os
@@ -189,7 +189,7 @@ def get_gemini_recommendation(
         # Konfigurasi Gemini
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-3.5-flash",
             generation_config={
                 "temperature":     0.7,
                 "top_p":           0.9,
@@ -215,7 +215,7 @@ def get_gemini_recommendation(
             "success": True,
             "content": response.text,
             "error":   None,
-            "model":   "gemini-1.5-flash",
+            "model":   "gemini-3.5-flash",
         }
 
     except Exception as e:
@@ -232,7 +232,7 @@ def get_gemini_recommendation(
             "success": False,
             "content": "",
             "error":   error_msg,
-            "model":   "gemini-1.5-flash",
+            "model":   "gemini-3.5-flash",
         }
 
 
@@ -280,7 +280,7 @@ def render_gemini_section(
         st.markdown("""
         <div style="background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.3);
                     border-radius:10px;padding:1rem;">
-            ✨ <strong>Powered by Google Gemini 1.5 Flash</strong><br>
+            ✨ <strong>Powered by Google Gemini 3.5 Flash</strong><br>
             <span style="font-size:0.85rem;color:#8b949e;">
             Analisis mendalam dan rekomendasi strategis yang dipersonalisasi
             berdasarkan data UMKM Anda oleh AI Google Gemini.
@@ -313,7 +313,7 @@ def render_gemini_section(
             st.markdown("""
             <div style="background:rgba(46,160,67,0.08);border:1px solid rgba(46,160,67,0.3);
                         border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;">
-                ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini 1.5 Flash</strong>
+                ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini 3.5 Flash</strong>
             </div>
             """, unsafe_allow_html=True)
 
