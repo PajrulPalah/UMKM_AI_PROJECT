@@ -194,7 +194,7 @@ def get_gemini_recommendation(
                 "temperature":     0.7,
                 "top_p":           0.9,
                 "top_k":           40,
-                "max_output_tokens": 2048,
+                "max_output_tokens": 8192,
             },
             safety_settings=[
                 {"category": "HARM_CATEGORY_HARASSMENT",        "threshold": "BLOCK_NONE"},
@@ -308,31 +308,42 @@ def render_gemini_section(
                 scores           = scores,
                 probabilities    = result["probabilities"],
             )
-
+        # Simpan ke session_state agar tidak hilang saat download diklik
         if gemini_result["success"]:
-            st.markdown("""
-            <div style="background:rgba(46,160,67,0.08);border:1px solid rgba(46,160,67,0.3);
-                        border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;">
-                ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini 3.5 Flash</strong>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Tampilkan rekomendasi
-            st.markdown(
-                f"""<div style="background:#161b22;border:1px solid #30363d;border-radius:12px;
-                               padding:1.5rem 2rem;line-height:1.8;color:#e6edf3;font-size:0.95rem;">
-                {gemini_result['content'].replace(chr(10), '<br>')}
-                </div>""",
-                unsafe_allow_html=True
-            )
-
-            # Download rekomendasi
-            st.download_button(
-                label="📥 Download Rekomendasi Gemini (TXT)",
-                data=gemini_result["content"].encode("utf-8"),
-                file_name=f"rekomendasi_gemini_{business_name.replace(' ','_')}.txt",
-                mime="text/plain",
-                use_container_width=True,
-            )
+            st.session_state["gemini_result"] = gemini_result
+            st.session_state["gemini_business_name"] = business_name
         else:
+            st.session_state.pop("gemini_result", None)
             st.error(f"❌ Gagal mendapatkan rekomendasi: {gemini_result['error']}")
+
+    # Tampilkan hasil dari session_state (persists saat download diklik)
+    if st.session_state.get("gemini_result") and st.session_state["gemini_result"]["success"]:
+        saved = st.session_state["gemini_result"]
+        saved_name = st.session_state.get("gemini_business_name", business_name)
+
+        st.markdown("""
+        <div style="background:rgba(46,160,67,0.08);border:1px solid rgba(46,160,67,0.3);
+                    border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;">
+            ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini 3.5 Flash</strong>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Tampilkan rekomendasi dengan area scroll jika terlalu panjang
+        st.markdown(
+            f"""<div style="background:#161b22;border:1px solid #30363d;border-radius:12px;
+                           padding:1.5rem 2rem;line-height:1.8;color:#e6edf3;font-size:0.95rem;
+                           max-height:600px;overflow-y:auto;white-space:pre-wrap;">
+            {saved['content'].replace('<','&lt;').replace('>','&gt;').replace(chr(10), '<br>')}
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+        # Download rekomendasi - tidak akan menghilangkan hasil karena sudah di session_state
+        st.download_button(
+            label="📥 Download Rekomendasi Gemini (TXT)",
+            data=saved["content"].encode("utf-8"),
+            file_name=f"rekomendasi_gemini_{saved_name.replace(' ','_')}.txt",
+            mime="text/plain",
+            use_container_width=True,
+            key="download_gemini_btn",
+        )
