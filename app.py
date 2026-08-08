@@ -945,14 +945,45 @@ if submitted:
     log_path = save_submission(profile, responses, scores, result)
     n_total  = get_submission_count()
 
-    # ── RESULTS DISPLAY ────────────────────────────────────
-    st.markdown("---")
-    st.markdown("## 📊 Hasil Prediksi Ketahanan Bisnis UMKM Anda")
+    # ── SIMPAN SEMUA HASIL KE SESSION STATE ────────────────
+    # Agar data tetap tersedia saat tombol Gemini diklik (rerun)
+    st.session_state["prediction_done"] = True
+    st.session_state["pred_result"] = result
+    st.session_state["pred_scores"] = scores
+    st.session_state["pred_business_name"] = business_name.strip()
+    st.session_state["pred_business_sector"] = business_sector
+    st.session_state["pred_province"] = province
+    st.session_state["pred_city"] = city.strip()
+    st.session_state["pred_model_choice"] = model_choice
+    st.session_state["pred_n_total"] = n_total
+
+    # Auto-retrain check
+    if n_total > 0 and n_total % 10 == 0:
+        st.info(f"🔄 Mencapai **{n_total}** responden — model sedang dilatih ulang secara otomatis di background...")
+        retrain_model_background(n_new=10)
+
+
+# ══════════════════════════════════════════════════════════
+# DISPLAY RESULTS (dari session_state agar tetap ada saat rerun)
+# ══════════════════════════════════════════════════════════
+
+if st.session_state.get("prediction_done"):
+    result         = st.session_state["pred_result"]
+    scores         = st.session_state["pred_scores"]
+    business_name  = st.session_state["pred_business_name"]
+    business_sector = st.session_state["pred_business_sector"]
+    province       = st.session_state["pred_province"]
+    model_choice_display = st.session_state["pred_model_choice"]
+    n_total        = st.session_state["pred_n_total"]
 
     pred       = result["predicted_class"]
     confidence = result["confidence"]
     probs      = result["probabilities"]
     br_score   = result["br_score"]
+
+    # ── RESULTS DISPLAY ────────────────────────────────────
+    st.markdown("---")
+    st.markdown("## 📊 Hasil Prediksi Ketahanan Bisnis UMKM Anda")
 
     # Result banner
     color_class = {"High": "result-high", "Medium": "result-medium", "Low": "result-low"}.get(pred, "result-medium")
@@ -968,7 +999,7 @@ if submitted:
         </div>
         <div class="result-sublabel">Level Ketahanan Bisnis</div>
         <div style="font-size:0.95rem; margin-top:0.8rem; color:#c9d1d9;">
-            Model: <strong>{model_choice.replace('_',' ').title()}</strong> &nbsp;|&nbsp;
+            Model: <strong>{model_choice_display.replace('_',' ').title()}</strong> &nbsp;|&nbsp;
             Kepercayaan: <strong>{confidence:.1%}</strong>
         </div>
     </div>
@@ -1070,7 +1101,7 @@ if submitted:
     result_df = pd.DataFrame([{
         "UMKM": business_name,
         "Provinsi": province,
-        "Kota": city,
+        "Kota": st.session_state.get("pred_city", ""),
         "Sektor": business_sector,
         "Prediksi": pred,
         "Kategori": label_id[pred],
@@ -1078,7 +1109,7 @@ if submitted:
         "Skor BR Estimasi": br_score,
         **{score_labels.get(k, k): f"{v:.2f}" for k, v in scores.items()},
         "Tanggal": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "Model": model_choice,
+        "Model": model_choice_display,
     }])
     csv_bytes = result_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
     st.download_button(
@@ -1090,11 +1121,6 @@ if submitted:
     )
 
     st.success(f"✅ Data UMKM **{business_name}** berhasil disimpan sebagai responden ke-**{n_total}**. Terima kasih telah berkontribusi dalam penelitian ini!")
-
-    # Auto-retrain check
-    if n_total > 0 and n_total % 10 == 0:
-        st.info(f"🔄 Mencapai **{n_total}** responden — model sedang dilatih ulang secara otomatis di background...")
-        retrain_model_background(n_new=10)
 
     # ── GEMINI AI RECOMMENDATION ───────────────────────────
     if GEMINI_MODULE_OK:
