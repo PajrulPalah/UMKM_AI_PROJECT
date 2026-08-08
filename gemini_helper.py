@@ -553,7 +553,7 @@ def get_gemini_recommendation(
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+            model_name="gemini-3.5-flash",
             generation_config={
                 "temperature":       0.4,   # lebih rendah = lebih konsisten & faktual
                 "top_p":             0.9,
@@ -586,7 +586,7 @@ def get_gemini_recommendation(
             "success":        True,
             "content":        response.text,
             "error":          None,
-            "model":          "gemini-2.0-flash",
+            "model":          "gemini-3.5.0-flash",
             "prompt_version": PROMPT_VERSION,
         }
 
@@ -604,7 +604,7 @@ def get_gemini_recommendation(
             "success":        False,
             "content":        "",
             "error":          error_msg,
-            "model":          "gemini-2.0-flash",
+            "model":          "gemini-3.5.0-flash",
             "prompt_version": PROMPT_VERSION,
         }
 
@@ -656,7 +656,7 @@ def render_gemini_section(
         st.markdown(f"""
         <div style="background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.3);
                     border-radius:10px;padding:1rem;">
-            ✨ <strong>Powered by Google Gemini 2.0 Flash</strong>
+            ✨ <strong>Powered by Google Gemini 3.5 Flash</strong>
             <span style="font-size:0.75rem;background:rgba(88,166,255,0.2);
                          border-radius:4px;padding:2px 6px;margin-left:6px;">Prompt {pv_badge}</span><br>
             <span style="font-size:0.85rem;color:#8b949e;">
