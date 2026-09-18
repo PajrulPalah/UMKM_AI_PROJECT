@@ -370,20 +370,40 @@ def predict_resilience(model, scaler, label_encoder, scores: dict) -> dict:
     }
 
 
-def save_submission(profile: dict, responses: dict, scores: dict, result: dict):
+def save_submission(
+    profile: dict,
+    responses: dict,
+    scores: dict,
+    result: dict,
+    model_name: str = "",
+    recommendations: list | None = None,
+):
     """
-    Save each form submission to CSV for auto-retraining.
-    New data is appended to data/submissions/submissions_log.csv
+    Save each form submission to CSV for auto-retraining and history tracking.
+    New data is appended to data/submissions/submissions_log.csv.
+
+    Extra columns saved (v2):
+      Model_Used        – nama algoritma ML yang dipakai
+      Prob_Low/Med/High – probabilitas per kelas
+      AI_Recommendation – rekomendasi strategis (rule-based, digabung '; ')
     """
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    probs = result.get("probabilities", {})
+    rec_text = " | ".join(recommendations) if recommendations else ""
+
     row = {
         "Timestamp": now,
         **profile,
-        **responses,  # all 37 Likert items
-        **{k: v for k, v in scores.items()},
-        "Predicted_Category": result["predicted_class"],
-        "Confidence": result["confidence"],
-        "BR_Score_Estimated": result["br_score"],
+        **responses,          # all 37 Likert items
+        **scores,
+        "Predicted_Category":  result["predicted_class"],
+        "Confidence":          result["confidence"],
+        "BR_Score_Estimated":  result["br_score"],
+        "Prob_Low":            probs.get("Low",    0.0),
+        "Prob_Medium":         probs.get("Medium", 0.0),
+        "Prob_High":           probs.get("High",   0.0),
+        "Model_Used":          model_name,
+        "AI_Recommendation":   rec_text,
     }
     log_path = LOG_DIR / "submissions_log.csv"
     df_row = pd.DataFrame([row])
@@ -393,7 +413,7 @@ def save_submission(profile: dict, responses: dict, scores: dict, result: dict):
     else:
         df_row.to_csv(log_path, mode="w", header=True, index=False, encoding="utf-8-sig")
 
-    return log_path
+    return log_path, now
 
 
 def get_submission_count() -> int:
@@ -623,515 +643,1019 @@ with st.sidebar:
     st.caption("v2.0.0 | UMKM AI Research | 2026")
 
 
-# ══════════════════════════════════════════════════════════
-# HERO BANNER
-# ══════════════════════════════════════════════════════════
 
-st.markdown("""
-<div class="hero-banner">
-    <h1>🏢 Sistem Prediksi Ketahanan Bisnis UMKM</h1>
-    <p>
-        Berbasis Kecerdasan Buatan (AI) &nbsp;|&nbsp;
-        Isi formulir di bawah &rarr; Klik <strong>Generate Prediksi</strong> &rarr;
-        Dapatkan hasil analisis & rekomendasi instan
-    </p>
-</div>
-""", unsafe_allow_html=True)
+# ════════════════════════════════════════════════════════
+# TABS — Form Prediksi | Riwayat Submission
+# ════════════════════════════════════════════════════════
 
-st.markdown("""
-<div class="info-box">
-    ℹ️ <strong>Petunjuk Pengisian:</strong> Isi semua bagian formulir di bawah ini dengan jujur sesuai kondisi UMKM Anda.
-    Untuk pertanyaan kuesioner, pilih angka 1–5 yang paling mencerminkan kondisi usaha Anda saat ini.
-    Data Anda akan digunakan untuk meningkatkan akurasi model AI secara berkelanjutan.
-</div>
-""", unsafe_allow_html=True)
+tab_form, tab_history = st.tabs([
+    "🔮 Form Prediksi",
+    "📜 Riwayat Submission",
+])
 
+# ── TAB 1: FORM ─────────────────────────────────────────────
+with tab_form:
 
-# ══════════════════════════════════════════════════════════
-# FORM
-# ══════════════════════════════════════════════════════════
+    # ══════════════════════════════════════════════════════════
+    # HERO BANNER
+    # ══════════════════════════════════════════════════════════
 
-with st.form("umkm_form", clear_on_submit=False):
-
-    # ── BAGIAN 1: PROFIL UMKM ─────────────────────────────
-    st.markdown('<div class="section-header">📋 Bagian 1: Profil UMKM</div>', unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        business_name = st.text_input(
-            "Nama UMKM *",
-            placeholder="Contoh: Batik Nusantara Indah",
-            help="Apa nama UMKM Anda?"
-        )
-        province = st.selectbox(
-            "Provinsi *",
-            options=["-- Pilih Provinsi --",
-                     "Aceh","Sumatera Utara","Sumatera Barat","Riau","Kepulauan Riau",
-                     "Jambi","Bengkulu","Sumatera Selatan","Kepulauan Bangka Belitung","Lampung",
-                     "DKI Jakarta","Jawa Barat","Banten","Jawa Tengah","DI Yogyakarta","Jawa Timur",
-                     "Bali","Nusa Tenggara Barat","Nusa Tenggara Timur",
-                     "Kalimantan Barat","Kalimantan Tengah","Kalimantan Selatan",
-                     "Kalimantan Timur","Kalimantan Utara",
-                     "Sulawesi Utara","Gorontalo","Sulawesi Tengah","Sulawesi Barat",
-                     "Sulawesi Selatan","Sulawesi Tenggara",
-                     "Maluku","Maluku Utara","Papua Barat","Papua",
-                     "Papua Selatan","Papua Tengah","Papua Pegunungan","Papua Barat Daya"]
-        )
-        city = st.text_input(
-            "Kota/Kabupaten *",
-            placeholder="Contoh: Bandung",
-            help="Di kota/kabupaten manakah UMKM Anda beroperasi?"
-        )
-
-    with col2:
-        business_sector = st.selectbox(
-            "Sektor Usaha *",
-            options=["-- Pilih Sektor --",
-                     "Kuliner & Makanan-Minuman",
-                     "Fashion & Tekstil",
-                     "Kerajinan Tangan & Seni",
-                     "Teknologi & Digital",
-                     "Pertanian & Pangan",
-                     "Perdagangan Eceran",
-                     "Jasa & Konsultasi",
-                     "Manufaktur & Produksi",
-                     "Kesehatan & Kecantikan",
-                     "Pendidikan & Pelatihan",
-                     "Pariwisata & Perhotelan",
-                     "Konstruksi & Properti",
-                     "Transportasi & Logistik",
-                     "Lainnya"]
-        )
-        business_age = st.number_input(
-            "Usia Usaha (Tahun) *",
-            min_value=0.0, max_value=50.0, value=3.0, step=0.5,
-            help="Berapa usia usaha Anda (dalam tahun)?"
-        )
-        num_employees = st.number_input(
-            "Jumlah Karyawan *",
-            min_value=0, max_value=300, value=5, step=1,
-            help="Berapa jumlah karyawan yang saat ini bekerja di UMKM Anda?"
-        )
-
-    with col3:
-        annual_revenue = st.selectbox(
-            "Omzet Tahunan (Rp) *",
-            options=["-- Pilih Kisaran --",
-                     "< Rp 50 Juta",
-                     "Rp 50–100 Juta",
-                     "Rp 100–300 Juta",
-                     "Rp 300–500 Juta",
-                     "Rp 500 Juta – 1 Miliar",
-                     "Rp 1–2,5 Miliar",
-                     "Rp 2,5–5 Miliar",
-                     "> Rp 5 Miliar"]
-        )
-        digital_pct = st.slider(
-            "Persentase Penjualan Digital (%)",
-            min_value=0, max_value=100, value=20, step=5,
-            help="Berapa % penjualan dari kanal digital (marketplace, medsos, website, dll.)?"
-        )
-        owner_age = st.number_input(
-            "Usia Pemilik *",
-            min_value=17, max_value=80, value=35, step=1
-        )
-
-    col4, col5 = st.columns(2)
-    with col4:
-        owner_gender = st.radio(
-            "Jenis Kelamin Pemilik *",
-            options=["Laki-laki", "Perempuan"],
-            horizontal=True
-        )
-        education = st.selectbox(
-            "Pendidikan Terakhir Pemilik *",
-            options=["-- Pilih Pendidikan --",
-                     "SD / SMP",
-                     "SMA / SMK",
-                     "Diploma (D1–D3)",
-                     "Sarjana (S1)",
-                     "Magister (S2)",
-                     "Doktor (S3)"]
-        )
-    with col5:
-        legal_status = st.selectbox(
-            "Status Legalitas Usaha *",
-            options=["-- Pilih Status --",
-                     "Belum berbadan hukum (informal)",
-                     "Usaha Dagang (UD)",
-                     "CV (Commanditaire Vennootschap)",
-                     "PT (Perseroan Terbatas)",
-                     "Koperasi",
-                     "Yayasan / Perkumpulan"]
-        )
-
-    st.markdown("---")
-
-    # Helper: render Likert question
-    def likert_q(label: str, key: str, question: str, default: int = 3) -> int:
-        st.markdown(f"**{label}** — *{question}*")
-        val = st.radio(
-            label, options=[1,2,3,4,5],
-            format_func=lambda x: LIKERT_LABELS[x],
-            index=default - 1,
-            horizontal=True,
-            key=key,
-            label_visibility="collapsed"
-        )
-        return val
-
-    # ── BAGIAN 2: KAPABILITAS DIGITAL ─────────────────────
-    st.markdown('<div class="section-header">💻 Bagian 2: Kapabilitas Digital</div>', unsafe_allow_html=True)
-
-    dc1 = likert_q("DC1","dc1_q","UMKM kami menggunakan teknologi digital dalam kegiatan operasional sehari-hari.")
-    dc2 = likert_q("DC2","dc2_q","UMKM kami memanfaatkan media digital (media sosial, marketplace, atau website) untuk menjalankan bisnis.")
-    dc3 = likert_q("DC3","dc3_q","UMKM kami menggunakan data digital sebagai dasar dalam pengambilan keputusan bisnis.")
-    dc4 = likert_q("DC4","dc4_q","Teknologi digital telah terintegrasi dengan baik dalam proses bisnis UMKM kami.")
-    dc5 = likert_q("DC5","dc5_q","UMKM kami mampu mempelajari dan mengadopsi teknologi digital baru dengan cepat.")
-    st.markdown("---")
-
-    # ── BAGIAN 3: KEMAMPUAN INOVASI ───────────────────────
-    st.markdown('<div class="section-header">💡 Bagian 3: Kemampuan Inovasi</div>', unsafe_allow_html=True)
-
-    ic1 = likert_q("IC1","ic1_q","UMKM kami secara rutin mengembangkan produk atau layanan baru.")
-    ic2 = likert_q("IC2","ic2_q","UMKM kami terus melakukan perbaikan terhadap proses operasional.")
-    ic3 = likert_q("IC3","ic3_q","UMKM kami menerapkan cara pemasaran yang baru dan kreatif.")
-    ic4 = likert_q("IC4","ic4_q","UMKM kami mampu menyesuaikan produk sesuai kebutuhan pelanggan.")
-    ic5 = likert_q("IC5","ic5_q","Ide-ide baru dapat diterapkan dengan cepat di UMKM kami.")
-    st.markdown("---")
-
-    # ── BAGIAN 4: ORIENTASI KEWIRAUSAHAAN ─────────────────
-    st.markdown('<div class="section-header">🚀 Bagian 4: Orientasi Kewirausahaan</div>', unsafe_allow_html=True)
-
-    eo1 = likert_q("EO1","eo1_q","UMKM kami aktif mencari peluang usaha baru sebelum pesaing.")
-    eo2 = likert_q("EO2","eo2_q","UMKM kami berani mengambil risiko yang telah diperhitungkan untuk mengembangkan usaha.")
-    eo3 = likert_q("EO3","eo3_q","UMKM kami selalu berupaya menciptakan pembaruan dalam bisnis.")
-    eo4 = likert_q("EO4","eo4_q","UMKM kami secara aktif bersaing untuk meningkatkan posisi di pasar.")
-    eo5 = likert_q("EO5","eo5_q","UMKM kami memiliki kebebasan dalam mengambil keputusan strategis.")
-    st.markdown("---")
-
-    # ── BAGIAN 5: AGILITAS ORGANISASI ─────────────────────
-    st.markdown('<div class="section-header">⚡ Bagian 5: Agilitas Organisasi</div>', unsafe_allow_html=True)
-
-    oa1 = likert_q("OA1","oa1_q","UMKM kami mampu mendeteksi perubahan kebutuhan pasar dengan cepat.")
-    oa2 = likert_q("OA2","oa2_q","UMKM kami mampu mengambil keputusan bisnis dengan cepat ketika terjadi perubahan.")
-    oa3 = likert_q("OA3","oa3_q","UMKM kami dapat menyesuaikan proses bisnis dengan cepat sesuai kondisi yang berubah.")
-    oa4 = likert_q("OA4","oa4_q","UMKM kami mampu mengalokasikan kembali sumber daya secara cepat ketika diperlukan.")
-    oa5 = likert_q("OA5","oa5_q","UMKM kami mampu merespons kebutuhan pelanggan dengan cepat.")
-    st.markdown("---")
-
-    # ── BAGIAN 6: AKSES SUMBER DAYA ──────────────────────
-    st.markdown('<div class="section-header">💰 Bagian 6: Akses Sumber Daya</div>', unsafe_allow_html=True)
-
-    ra1 = likert_q("RA1","ra1_q","UMKM kami memiliki akses yang memadai terhadap sumber pembiayaan usaha.")
-    ra2 = likert_q("RA2","ra2_q","UMKM kami memiliki sumber daya manusia yang kompeten.")
-    ra3 = likert_q("RA3","ra3_q","UMKM kami memiliki akses yang stabil terhadap bahan baku atau sumber daya utama.")
-    ra4 = likert_q("RA4","ra4_q","UMKM kami memiliki jaringan kerja sama bisnis yang mendukung perkembangan usaha.")
-    ra5 = likert_q("RA5","ra5_q","UMKM kami mudah memperoleh informasi mengenai kondisi pasar.")
-    st.markdown("---")
-
-    # ── BAGIAN 7: DINAMIKA LINGKUNGAN ─────────────────────
-    st.markdown('<div class="section-header">🌍 Bagian 7: Dinamika Lingkungan</div>', unsafe_allow_html=True)
-
-    st.markdown("""<div class="info-box">
-        ℹ️ Bagian ini mengukur seberapa <strong>dinamis lingkungan bisnis</strong> Anda.
-        Nilai tinggi berarti lingkungan bisnis Anda <em>sangat berubah-ubah</em>.
-    </div>""", unsafe_allow_html=True)
-
-    ed1 = likert_q("ED1","ed1_q","Permintaan pelanggan terhadap produk/jasa UMKM kami sering mengalami perubahan.")
-    ed2 = likert_q("ED2","ed2_q","Tingkat persaingan di lingkungan usaha kami berubah dengan cepat.")
-    ed3 = likert_q("ED3","ed3_q","Perkembangan teknologi di sektor usaha kami berlangsung dengan cepat.")
-    ed4 = likert_q("ED4","ed4_q","Kondisi ekonomi yang memengaruhi usaha kami sulit diprediksi.")
-    ed5 = likert_q("ED5","ed5_q","Ketersediaan bahan baku atau pasokan usaha kami sering mengalami perubahan.")
-    st.markdown("---")
-
-    # ── BAGIAN 8: KETAHANAN BISNIS (BR) ──────────────────
-    st.markdown('<div class="section-header">🛡️ Bagian 8: Ketahanan Bisnis (Self-Assessment)</div>', unsafe_allow_html=True)
-
-    st.markdown("""<div class="info-box">
-        ℹ️ Bagian ini digunakan untuk <strong>validasi model AI</strong>.
-        Jawablah sesuai persepsi Anda tentang ketahanan bisnis UMKM Anda sendiri.
-    </div>""", unsafe_allow_html=True)
-
-    br1 = likert_q("BR1","br1_q","UMKM kami mampu mempertahankan operasional meskipun menghadapi gangguan.")
-    br2 = likert_q("BR2","br2_q","UMKM kami mampu beradaptasi terhadap perubahan lingkungan bisnis.")
-    br3 = likert_q("BR3","br3_q","UMKM kami mampu pulih dengan cepat setelah mengalami gangguan usaha.")
-    br4 = likert_q("BR4","br4_q","UMKM kami mampu mempertahankan pelanggan dalam berbagai kondisi.")
-    br5 = likert_q("BR5","br5_q","UMKM kami mampu menjaga kestabilan pendapatan meskipun menghadapi tantangan.")
-    br6 = likert_q("BR6","br6_q","UMKM kami mampu memanfaatkan peluang bisnis baru setelah terjadi perubahan lingkungan.")
-    br7 = likert_q("BR7","br7_q","UMKM kami memiliki kesiapan dalam menghadapi berbagai risiko bisnis.")
-    st.markdown("---")
-
-    # ── SUBMIT BUTTON ──────────────────────────────────────
-    st.markdown("### 🔮 Generate Prediksi Ketahanan Bisnis")
-    st.markdown("""<div class="info-box">
-        Pastikan semua field telah diisi dengan lengkap sebelum menekan tombol di bawah.
-    </div>""", unsafe_allow_html=True)
-
-    submitted = st.form_submit_button(
-        "🔮 GENERATE PREDIKSI KETAHANAN BISNIS SAYA",
-        use_container_width=True
-    )
-
-
-# ══════════════════════════════════════════════════════════
-# PREDICTION RESULTS
-# ══════════════════════════════════════════════════════════
-
-if submitted:
-    # Validation
-    errors = []
-    if not business_name or business_name.strip() == "":
-        errors.append("Nama UMKM harus diisi.")
-    if province == "-- Pilih Provinsi --":
-        errors.append("Provinsi harus dipilih.")
-    if not city or city.strip() == "":
-        errors.append("Kota/Kabupaten harus diisi.")
-    if business_sector == "-- Pilih Sektor --":
-        errors.append("Sektor Usaha harus dipilih.")
-    if annual_revenue == "-- Pilih Kisaran --":
-        errors.append("Omzet Tahunan harus dipilih.")
-    if education == "-- Pilih Pendidikan --":
-        errors.append("Pendidikan Terakhir harus dipilih.")
-    if legal_status == "-- Pilih Status --":
-        errors.append("Status Legalitas Usaha harus dipilih.")
-
-    if errors:
-        for err in errors:
-            st.error(f"❌ {err}")
-        st.stop()
-
-    # ── Load model ─────────────────────────────────────────
-    with st.spinner("🤖 Memuat model AI dan memproses prediksi..."):
-        model, scaler, label_encoder, feat_cols = load_model(model_choice)
-
-    if model is None:
-        st.error(f"❌ Model '{model_choice}' tidak ditemukan di folder model/. Jalankan `python run_pipeline.py` terlebih dahulu.")
-        st.stop()
-
-    # ── Collect all responses ──────────────────────────────
-    responses = {
-        "DC1":dc1,"DC2":dc2,"DC3":dc3,"DC4":dc4,"DC5":dc5,
-        "IC1":ic1,"IC2":ic2,"IC3":ic3,"IC4":ic4,"IC5":ic5,
-        "EO1":eo1,"EO2":eo2,"EO3":eo3,"EO4":eo4,"EO5":eo5,
-        "OA1":oa1,"OA2":oa2,"OA3":oa3,"OA4":oa4,"OA5":oa5,
-        "RA1":ra1,"RA2":ra2,"RA3":ra3,"RA4":ra4,"RA5":ra5,
-        "ED1":ed1,"ED2":ed2,"ED3":ed3,"ED4":ed4,"ED5":ed5,
-        "BR1":br1,"BR2":br2,"BR3":br3,"BR4":br4,"BR5":br5,"BR6":br6,"BR7":br7,
-    }
-
-    # Compute construct scores
-    scores = compute_construct_scores(responses)
-
-    # Predict
-    result = predict_resilience(model, scaler, label_encoder, scores)
-
-    # Save to CSV log
-    profile = {
-        "Business_Name": business_name.strip(),
-        "Province": province,
-        "City": city.strip(),
-        "Business_Sector": business_sector,
-        "Business_Age": business_age,
-        "Number_of_Employees": num_employees,
-        "Annual_Revenue": annual_revenue,
-        "Digital_Sales_Percentage": digital_pct,
-        "Owner_Age": owner_age,
-        "Owner_Gender": owner_gender,
-        "Education": education,
-        "Legal_Status": legal_status,
-    }
-    log_path = save_submission(profile, responses, scores, result)
-    n_total  = get_submission_count()
-
-    # ── SIMPAN SEMUA HASIL KE SESSION STATE ────────────────
-    # Agar data tetap tersedia saat tombol Gemini diklik (rerun)
-    st.session_state["prediction_done"] = True
-    st.session_state["pred_result"] = result
-    st.session_state["pred_scores"] = scores
-    st.session_state["pred_business_name"] = business_name.strip()
-    st.session_state["pred_business_sector"] = business_sector
-    st.session_state["pred_province"] = province
-    st.session_state["pred_city"] = city.strip()
-    st.session_state["pred_model_choice"] = model_choice
-    st.session_state["pred_n_total"] = n_total
-
-    # Auto-retrain check
-    if n_total > 0 and n_total % 10 == 0:
-        st.info(f"🔄 Mencapai **{n_total}** responden — model sedang dilatih ulang secara otomatis di background...")
-        retrain_model_background(n_new=10)
-
-
-# ══════════════════════════════════════════════════════════
-# DISPLAY RESULTS (dari session_state agar tetap ada saat rerun)
-# ══════════════════════════════════════════════════════════
-
-if st.session_state.get("prediction_done"):
-    result         = st.session_state["pred_result"]
-    scores         = st.session_state["pred_scores"]
-    business_name  = st.session_state["pred_business_name"]
-    business_sector = st.session_state["pred_business_sector"]
-    province       = st.session_state["pred_province"]
-    model_choice_display = st.session_state["pred_model_choice"]
-    n_total        = st.session_state["pred_n_total"]
-
-    pred       = result["predicted_class"]
-    confidence = result["confidence"]
-    probs      = result["probabilities"]
-    br_score   = result["br_score"]
-
-    # ── RESULTS DISPLAY ────────────────────────────────────
-    st.markdown("---")
-    st.markdown("## 📊 Hasil Prediksi Ketahanan Bisnis UMKM Anda")
-
-    # Result banner
-    color_class = {"High": "result-high", "Medium": "result-medium", "Low": "result-low"}.get(pred, "result-medium")
-    emoji_map   = {"High": "🟢", "Medium": "🟡", "Low": "🔴"}
-    label_id    = {"High": "TINGGI", "Medium": "SEDANG", "Low": "RENDAH"}
-    color_hex   = {"High": "#2ea043", "Medium": "#d29922", "Low": "#da3633"}
-
-    st.markdown(f"""
-    <div class="{color_class}">
-        <div class="result-sublabel">Hasil Prediksi untuk <strong>{business_name}</strong></div>
-        <div class="result-label" style="color:{color_hex[pred]}">
-            {emoji_map[pred]} {label_id[pred]}
-        </div>
-        <div class="result-sublabel">Level Ketahanan Bisnis</div>
-        <div style="font-size:0.95rem; margin-top:0.8rem; color:#c9d1d9;">
-            Model: <strong>{model_choice_display.replace('_',' ').title()}</strong> &nbsp;|&nbsp;
-            Kepercayaan: <strong>{confidence:.1%}</strong>
-        </div>
+    st.markdown("""
+    <div class="hero-banner">
+        <h1>🏢 Sistem Prediksi Ketahanan Bisnis UMKM</h1>
+        <p>
+            Berbasis Kecerdasan Buatan (AI) &nbsp;|&nbsp;
+            Isi formulir di bawah &rarr; Klik <strong>Generate Prediksi</strong> &rarr;
+            Dapatkan hasil analisis & rekomendasi instan
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="info-box">
+        ℹ️ <strong>Petunjuk Pengisian:</strong> Isi semua bagian formulir di bawah ini dengan jujur sesuai kondisi UMKM Anda.
+        Untuk pertanyaan kuesioner, pilih angka 1–5 yang paling mencerminkan kondisi usaha Anda saat ini.
+        Data Anda akan digunakan untuk meningkatkan akurasi model AI secara berkelanjutan.
+    </div>
+    """, unsafe_allow_html=True)
 
-    # ── Metrics row ────────────────────────────────────────
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-value" style="color:{color_hex[pred]}">{label_id[pred]}</div>
-            <div class="metric-label">Kategori Ketahanan</div>
+
+    # ══════════════════════════════════════════════════════════
+    # FORM
+    # ══════════════════════════════════════════════════════════
+
+    with st.form("umkm_form", clear_on_submit=False):
+
+        # ── BAGIAN 1: PROFIL UMKM ─────────────────────────────
+        st.markdown('<div class="section-header">📋 Bagian 1: Profil UMKM</div>', unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            business_name = st.text_input(
+                "Nama UMKM *",
+                placeholder="Contoh: Batik Nusantara Indah",
+                help="Apa nama UMKM Anda?"
+            )
+            province = st.selectbox(
+                "Provinsi *",
+                options=["-- Pilih Provinsi --",
+                         "Aceh","Sumatera Utara","Sumatera Barat","Riau","Kepulauan Riau",
+                         "Jambi","Bengkulu","Sumatera Selatan","Kepulauan Bangka Belitung","Lampung",
+                         "DKI Jakarta","Jawa Barat","Banten","Jawa Tengah","DI Yogyakarta","Jawa Timur",
+                         "Bali","Nusa Tenggara Barat","Nusa Tenggara Timur",
+                         "Kalimantan Barat","Kalimantan Tengah","Kalimantan Selatan",
+                         "Kalimantan Timur","Kalimantan Utara",
+                         "Sulawesi Utara","Gorontalo","Sulawesi Tengah","Sulawesi Barat",
+                         "Sulawesi Selatan","Sulawesi Tenggara",
+                         "Maluku","Maluku Utara","Papua Barat","Papua",
+                         "Papua Selatan","Papua Tengah","Papua Pegunungan","Papua Barat Daya"]
+            )
+            city = st.text_input(
+                "Kota/Kabupaten *",
+                placeholder="Contoh: Bandung",
+                help="Di kota/kabupaten manakah UMKM Anda beroperasi?"
+            )
+
+        with col2:
+            business_sector = st.selectbox(
+                "Sektor Usaha *",
+                options=["-- Pilih Sektor --",
+                         "Kuliner & Makanan-Minuman",
+                         "Fashion & Tekstil",
+                         "Kerajinan Tangan & Seni",
+                         "Teknologi & Digital",
+                         "Pertanian & Pangan",
+                         "Perdagangan Eceran",
+                         "Jasa & Konsultasi",
+                         "Manufaktur & Produksi",
+                         "Kesehatan & Kecantikan",
+                         "Pendidikan & Pelatihan",
+                         "Pariwisata & Perhotelan",
+                         "Konstruksi & Properti",
+                         "Transportasi & Logistik",
+                         "Lainnya"]
+            )
+            business_age = st.number_input(
+                "Usia Usaha (Tahun) *",
+                min_value=0.0, max_value=50.0, value=3.0, step=0.5,
+                help="Berapa usia usaha Anda (dalam tahun)?"
+            )
+            num_employees = st.number_input(
+                "Jumlah Karyawan *",
+                min_value=0, max_value=300, value=5, step=1,
+                help="Berapa jumlah karyawan yang saat ini bekerja di UMKM Anda?"
+            )
+
+        with col3:
+            annual_revenue = st.selectbox(
+                "Omzet Tahunan (Rp) *",
+                options=["-- Pilih Kisaran --",
+                         "< Rp 50 Juta",
+                         "Rp 50–100 Juta",
+                         "Rp 100–300 Juta",
+                         "Rp 300–500 Juta",
+                         "Rp 500 Juta – 1 Miliar",
+                         "Rp 1–2,5 Miliar",
+                         "Rp 2,5–5 Miliar",
+                         "> Rp 5 Miliar"]
+            )
+            digital_pct = st.slider(
+                "Persentase Penjualan Digital (%)",
+                min_value=0, max_value=100, value=20, step=5,
+                help="Berapa % penjualan dari kanal digital (marketplace, medsos, website, dll.)?"
+            )
+            owner_age = st.number_input(
+                "Usia Pemilik *",
+                min_value=17, max_value=80, value=35, step=1
+            )
+
+        col4, col5 = st.columns(2)
+        with col4:
+            owner_gender = st.radio(
+                "Jenis Kelamin Pemilik *",
+                options=["Laki-laki", "Perempuan"],
+                horizontal=True
+            )
+            education = st.selectbox(
+                "Pendidikan Terakhir Pemilik *",
+                options=["-- Pilih Pendidikan --",
+                         "SD / SMP",
+                         "SMA / SMK",
+                         "Diploma (D1–D3)",
+                         "Sarjana (S1)",
+                         "Magister (S2)",
+                         "Doktor (S3)"]
+            )
+        with col5:
+            legal_status = st.selectbox(
+                "Status Legalitas Usaha *",
+                options=["-- Pilih Status --",
+                         "Belum berbadan hukum (informal)",
+                         "Usaha Dagang (UD)",
+                         "CV (Commanditaire Vennootschap)",
+                         "PT (Perseroan Terbatas)",
+                         "Koperasi",
+                         "Yayasan / Perkumpulan"]
+            )
+
+        st.markdown("---")
+
+        # Helper: render Likert question
+        def likert_q(label: str, key: str, question: str, default: int = 3) -> int:
+            st.markdown(f"**{label}** — *{question}*")
+            val = st.radio(
+                label, options=[1,2,3,4,5],
+                format_func=lambda x: LIKERT_LABELS[x],
+                index=default - 1,
+                horizontal=True,
+                key=key,
+                label_visibility="collapsed"
+            )
+            return val
+
+        # ── BAGIAN 2: KAPABILITAS DIGITAL ─────────────────────
+        st.markdown('<div class="section-header">💻 Bagian 2: Kapabilitas Digital</div>', unsafe_allow_html=True)
+
+        dc1 = likert_q("DC1","dc1_q","UMKM kami menggunakan teknologi digital dalam kegiatan operasional sehari-hari.")
+        dc2 = likert_q("DC2","dc2_q","UMKM kami memanfaatkan media digital (media sosial, marketplace, atau website) untuk menjalankan bisnis.")
+        dc3 = likert_q("DC3","dc3_q","UMKM kami menggunakan data digital sebagai dasar dalam pengambilan keputusan bisnis.")
+        dc4 = likert_q("DC4","dc4_q","Teknologi digital telah terintegrasi dengan baik dalam proses bisnis UMKM kami.")
+        dc5 = likert_q("DC5","dc5_q","UMKM kami mampu mempelajari dan mengadopsi teknologi digital baru dengan cepat.")
+        st.markdown("---")
+
+        # ── BAGIAN 3: KEMAMPUAN INOVASI ───────────────────────
+        st.markdown('<div class="section-header">💡 Bagian 3: Kemampuan Inovasi</div>', unsafe_allow_html=True)
+
+        ic1 = likert_q("IC1","ic1_q","UMKM kami secara rutin mengembangkan produk atau layanan baru.")
+        ic2 = likert_q("IC2","ic2_q","UMKM kami terus melakukan perbaikan terhadap proses operasional.")
+        ic3 = likert_q("IC3","ic3_q","UMKM kami menerapkan cara pemasaran yang baru dan kreatif.")
+        ic4 = likert_q("IC4","ic4_q","UMKM kami mampu menyesuaikan produk sesuai kebutuhan pelanggan.")
+        ic5 = likert_q("IC5","ic5_q","Ide-ide baru dapat diterapkan dengan cepat di UMKM kami.")
+        st.markdown("---")
+
+        # ── BAGIAN 4: ORIENTASI KEWIRAUSAHAAN ─────────────────
+        st.markdown('<div class="section-header">🚀 Bagian 4: Orientasi Kewirausahaan</div>', unsafe_allow_html=True)
+
+        eo1 = likert_q("EO1","eo1_q","UMKM kami aktif mencari peluang usaha baru sebelum pesaing.")
+        eo2 = likert_q("EO2","eo2_q","UMKM kami berani mengambil risiko yang telah diperhitungkan untuk mengembangkan usaha.")
+        eo3 = likert_q("EO3","eo3_q","UMKM kami selalu berupaya menciptakan pembaruan dalam bisnis.")
+        eo4 = likert_q("EO4","eo4_q","UMKM kami secara aktif bersaing untuk meningkatkan posisi di pasar.")
+        eo5 = likert_q("EO5","eo5_q","UMKM kami memiliki kebebasan dalam mengambil keputusan strategis.")
+        st.markdown("---")
+
+        # ── BAGIAN 5: AGILITAS ORGANISASI ─────────────────────
+        st.markdown('<div class="section-header">⚡ Bagian 5: Agilitas Organisasi</div>', unsafe_allow_html=True)
+
+        oa1 = likert_q("OA1","oa1_q","UMKM kami mampu mendeteksi perubahan kebutuhan pasar dengan cepat.")
+        oa2 = likert_q("OA2","oa2_q","UMKM kami mampu mengambil keputusan bisnis dengan cepat ketika terjadi perubahan.")
+        oa3 = likert_q("OA3","oa3_q","UMKM kami dapat menyesuaikan proses bisnis dengan cepat sesuai kondisi yang berubah.")
+        oa4 = likert_q("OA4","oa4_q","UMKM kami mampu mengalokasikan kembali sumber daya secara cepat ketika diperlukan.")
+        oa5 = likert_q("OA5","oa5_q","UMKM kami mampu merespons kebutuhan pelanggan dengan cepat.")
+        st.markdown("---")
+
+        # ── BAGIAN 6: AKSES SUMBER DAYA ──────────────────────
+        st.markdown('<div class="section-header">💰 Bagian 6: Akses Sumber Daya</div>', unsafe_allow_html=True)
+
+        ra1 = likert_q("RA1","ra1_q","UMKM kami memiliki akses yang memadai terhadap sumber pembiayaan usaha.")
+        ra2 = likert_q("RA2","ra2_q","UMKM kami memiliki sumber daya manusia yang kompeten.")
+        ra3 = likert_q("RA3","ra3_q","UMKM kami memiliki akses yang stabil terhadap bahan baku atau sumber daya utama.")
+        ra4 = likert_q("RA4","ra4_q","UMKM kami memiliki jaringan kerja sama bisnis yang mendukung perkembangan usaha.")
+        ra5 = likert_q("RA5","ra5_q","UMKM kami mudah memperoleh informasi mengenai kondisi pasar.")
+        st.markdown("---")
+
+        # ── BAGIAN 7: DINAMIKA LINGKUNGAN ─────────────────────
+        st.markdown('<div class="section-header">🌍 Bagian 7: Dinamika Lingkungan</div>', unsafe_allow_html=True)
+
+        st.markdown("""<div class="info-box">
+            ℹ️ Bagian ini mengukur seberapa <strong>dinamis lingkungan bisnis</strong> Anda.
+            Nilai tinggi berarti lingkungan bisnis Anda <em>sangat berubah-ubah</em>.
         </div>""", unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-value">{confidence:.1%}</div>
-            <div class="metric-label">Kepercayaan Model</div>
+
+        ed1 = likert_q("ED1","ed1_q","Permintaan pelanggan terhadap produk/jasa UMKM kami sering mengalami perubahan.")
+        ed2 = likert_q("ED2","ed2_q","Tingkat persaingan di lingkungan usaha kami berubah dengan cepat.")
+        ed3 = likert_q("ED3","ed3_q","Perkembangan teknologi di sektor usaha kami berlangsung dengan cepat.")
+        ed4 = likert_q("ED4","ed4_q","Kondisi ekonomi yang memengaruhi usaha kami sulit diprediksi.")
+        ed5 = likert_q("ED5","ed5_q","Ketersediaan bahan baku atau pasokan usaha kami sering mengalami perubahan.")
+        st.markdown("---")
+
+        # ── BAGIAN 8: KETAHANAN BISNIS (BR) ──────────────────
+        st.markdown('<div class="section-header">🛡️ Bagian 8: Ketahanan Bisnis (Self-Assessment)</div>', unsafe_allow_html=True)
+
+        st.markdown("""<div class="info-box">
+            ℹ️ Bagian ini digunakan untuk <strong>validasi model AI</strong>.
+            Jawablah sesuai persepsi Anda tentang ketahanan bisnis UMKM Anda sendiri.
         </div>""", unsafe_allow_html=True)
-    with c3:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-value">{br_score:.2f}</div>
-            <div class="metric-label">Estimasi Skor BR (/ 5.0)</div>
+
+        br1 = likert_q("BR1","br1_q","UMKM kami mampu mempertahankan operasional meskipun menghadapi gangguan.")
+        br2 = likert_q("BR2","br2_q","UMKM kami mampu beradaptasi terhadap perubahan lingkungan bisnis.")
+        br3 = likert_q("BR3","br3_q","UMKM kami mampu pulih dengan cepat setelah mengalami gangguan usaha.")
+        br4 = likert_q("BR4","br4_q","UMKM kami mampu mempertahankan pelanggan dalam berbagai kondisi.")
+        br5 = likert_q("BR5","br5_q","UMKM kami mampu menjaga kestabilan pendapatan meskipun menghadapi tantangan.")
+        br6 = likert_q("BR6","br6_q","UMKM kami mampu memanfaatkan peluang bisnis baru setelah terjadi perubahan lingkungan.")
+        br7 = likert_q("BR7","br7_q","UMKM kami memiliki kesiapan dalam menghadapi berbagai risiko bisnis.")
+        st.markdown("---")
+
+        # ── SUBMIT BUTTON ──────────────────────────────────────
+        st.markdown("### 🔮 Generate Prediksi Ketahanan Bisnis")
+        st.markdown("""<div class="info-box">
+            Pastikan semua field telah diisi dengan lengkap sebelum menekan tombol di bawah.
         </div>""", unsafe_allow_html=True)
-    with c4:
-        st.markdown(f"""<div class="metric-card">
-            <div class="metric-value">#{n_total}</div>
-            <div class="metric-label">Anda Responden ke-</div>
-        </div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        submitted = st.form_submit_button(
+            "🔮 GENERATE PREDIKSI KETAHANAN BISNIS SAYA",
+            use_container_width=True
+        )
 
-    # ── Charts ─────────────────────────────────────────────
-    col_chart1, col_chart2 = st.columns([3, 2])
 
-    with col_chart1:
-        st.markdown("#### 📈 Distribusi Probabilitas Kelas")
-        fig_prob = render_probability_chart(probs)
-        st.pyplot(fig_prob, use_container_width=True)
-        plt.close()
+    # ══════════════════════════════════════════════════════════
+    # PREDICTION RESULTS
+    # ══════════════════════════════════════════════════════════
 
-        # Probability table
-        prob_data = {
-            "Kategori": ["🔴 Rendah (Low)", "🟡 Sedang (Medium)", "🟢 Tinggi (High)"],
-            "Probabilitas": [
-                f"{probs.get('Low',0):.1%}",
-                f"{probs.get('Medium',0):.1%}",
-                f"{probs.get('High',0):.1%}",
-            ]
+    if submitted:
+        # Validation
+        errors = []
+        if not business_name or business_name.strip() == "":
+            errors.append("Nama UMKM harus diisi.")
+        if province == "-- Pilih Provinsi --":
+            errors.append("Provinsi harus dipilih.")
+        if not city or city.strip() == "":
+            errors.append("Kota/Kabupaten harus diisi.")
+        if business_sector == "-- Pilih Sektor --":
+            errors.append("Sektor Usaha harus dipilih.")
+        if annual_revenue == "-- Pilih Kisaran --":
+            errors.append("Omzet Tahunan harus dipilih.")
+        if education == "-- Pilih Pendidikan --":
+            errors.append("Pendidikan Terakhir harus dipilih.")
+        if legal_status == "-- Pilih Status --":
+            errors.append("Status Legalitas Usaha harus dipilih.")
+
+        if errors:
+            for err in errors:
+                st.error(f"❌ {err}")
+            st.stop()
+
+        # ── Load model ─────────────────────────────────────────
+        with st.spinner("🤖 Memuat model AI dan memproses prediksi..."):
+            model, scaler, label_encoder, feat_cols = load_model(model_choice)
+
+        if model is None:
+            st.error(f"❌ Model '{model_choice}' tidak ditemukan di folder model/. Jalankan `python run_pipeline.py` terlebih dahulu.")
+            st.stop()
+
+        # ── Collect all responses ──────────────────────────────
+        responses = {
+            "DC1":dc1,"DC2":dc2,"DC3":dc3,"DC4":dc4,"DC5":dc5,
+            "IC1":ic1,"IC2":ic2,"IC3":ic3,"IC4":ic4,"IC5":ic5,
+            "EO1":eo1,"EO2":eo2,"EO3":eo3,"EO4":eo4,"EO5":eo5,
+            "OA1":oa1,"OA2":oa2,"OA3":oa3,"OA4":oa4,"OA5":oa5,
+            "RA1":ra1,"RA2":ra2,"RA3":ra3,"RA4":ra4,"RA5":ra5,
+            "ED1":ed1,"ED2":ed2,"ED3":ed3,"ED4":ed4,"ED5":ed5,
+            "BR1":br1,"BR2":br2,"BR3":br3,"BR4":br4,"BR5":br5,"BR6":br6,"BR7":br7,
         }
-        st.dataframe(pd.DataFrame(prob_data), hide_index=True, use_container_width=True)
 
-    with col_chart2:
-        st.markdown("#### 🕸️ Radar Kapabilitas UMKM")
-        fig_radar = render_radar_chart(scores)
-        st.pyplot(fig_radar, use_container_width=True)
-        plt.close()
+        # Compute construct scores
+        scores = compute_construct_scores(responses)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        # Predict
+        result = predict_resilience(model, scaler, label_encoder, scores)
 
-    # ── Construct scores breakdown ─────────────────────────
-    st.markdown("#### 📊 Detail Skor Konstruk")
-    score_labels = {
-        "DigitalCapabilityScore":          "💻 Kapabilitas Digital",
-        "InnovationCapabilityScore":       "💡 Kemampuan Inovasi",
-        "EntrepreneurialOrientationScore": "🚀 Orientasi Kewirausahaan",
-        "OrganizationalAgilityScore":      "⚡ Agilitas Organisasi",
-        "ResourceAccessScore":             "💰 Akses Sumber Daya",
-        "EnvironmentalDynamismScore":      "🌍 Dinamika Lingkungan",
-        "BusinessResilienceScore":         "🛡️ Ketahanan Bisnis (Self)",
-    }
-    score_cols = st.columns(4)
-    for idx, (key, label) in enumerate(score_labels.items()):
-        val = scores.get(key, 0.0)
-        bar_w = int(val / 5.0 * 100)
-        bar_color = "#2ea043" if val >= 3.5 else ("#d29922" if val >= 2.5 else "#da3633")
-        with score_cols[idx % 4]:
+        # Save to CSV log
+        profile = {
+            "Business_Name": business_name.strip(),
+            "Province": province,
+            "City": city.strip(),
+            "Business_Sector": business_sector,
+            "Business_Age": business_age,
+            "Number_of_Employees": num_employees,
+            "Annual_Revenue": annual_revenue,
+            "Digital_Sales_Percentage": digital_pct,
+            "Owner_Age": owner_age,
+            "Owner_Gender": owner_gender,
+            "Education": education,
+            "Legal_Status": legal_status,
+        }
+        recommendations = get_recommendations(result, scores)
+        log_path, now = save_submission(
+            profile, responses, scores, result,
+            model_name=model_choice,
+            recommendations=recommendations,
+        )
+        st.session_state["pred_recommendations"] = recommendations
+        n_total  = get_submission_count()
+
+        # ── SIMPAN SEMUA HASIL KE SESSION STATE ────────────────
+        # Agar data tetap tersedia saat tombol Gemini diklik (rerun)
+        st.session_state["prediction_done"] = True
+        st.session_state["pred_result"] = result
+        st.session_state["pred_scores"] = scores
+        st.session_state["pred_business_name"] = business_name.strip()
+        st.session_state["pred_business_sector"] = business_sector
+        st.session_state["pred_province"] = province
+        st.session_state["pred_city"] = city.strip()
+        st.session_state["pred_model_choice"] = model_choice
+        st.session_state["pred_n_total"] = n_total
+        st.session_state["pred_timestamp"] = now
+
+        # Auto-retrain check
+        if n_total > 0 and n_total % 10 == 0:
+            st.info(f"🔄 Mencapai **{n_total}** responden — model sedang dilatih ulang secara otomatis di background...")
+            retrain_model_background(n_new=10)
+
+
+    # ══════════════════════════════════════════════════════════
+    # DISPLAY RESULTS (dari session_state agar tetap ada saat rerun)
+    # ══════════════════════════════════════════════════════════
+
+    if st.session_state.get("prediction_done"):
+        result         = st.session_state["pred_result"]
+        scores         = st.session_state["pred_scores"]
+        business_name  = st.session_state["pred_business_name"]
+        business_sector = st.session_state["pred_business_sector"]
+        province       = st.session_state["pred_province"]
+        model_choice_display = st.session_state["pred_model_choice"]
+        n_total        = st.session_state["pred_n_total"]
+
+        pred       = result["predicted_class"]
+        confidence = result["confidence"]
+        probs      = result["probabilities"]
+        br_score   = result["br_score"]
+
+        # ── RESULTS DISPLAY ────────────────────────────────────
+        st.markdown("---")
+        st.markdown("## 📊 Hasil Prediksi Ketahanan Bisnis UMKM Anda")
+
+        # Result banner
+        color_class = {"High": "result-high", "Medium": "result-medium", "Low": "result-low"}.get(pred, "result-medium")
+        emoji_map   = {"High": "🟢", "Medium": "🟡", "Low": "🔴"}
+        label_id    = {"High": "TINGGI", "Medium": "SEDANG", "Low": "RENDAH"}
+        color_hex   = {"High": "#2ea043", "Medium": "#d29922", "Low": "#da3633"}
+
+        st.markdown(f"""
+        <div class="{color_class}">
+            <div class="result-sublabel">Hasil Prediksi untuk <strong>{business_name}</strong></div>
+            <div class="result-label" style="color:{color_hex[pred]}">
+                {emoji_map[pred]} {label_id[pred]}
+            </div>
+            <div class="result-sublabel">Level Ketahanan Bisnis</div>
+            <div style="font-size:0.95rem; margin-top:0.8rem; color:#c9d1d9;">
+                Model: <strong>{model_choice_display.replace('_',' ').title()}</strong> &nbsp;|&nbsp;
+                Kepercayaan: <strong>{confidence:.1%}</strong>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Metrics row ────────────────────────────────────────
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
             st.markdown(f"""<div class="metric-card">
-                <div style="font-size:0.78rem;color:#8b949e;margin-bottom:0.4rem">{label}</div>
-                <div class="metric-value" style="color:{bar_color};font-size:1.5rem">{val:.2f}</div>
-                <div style="background:#21262d;border-radius:4px;height:6px;margin-top:6px;">
-                    <div style="background:{bar_color};width:{bar_w}%;height:6px;border-radius:4px;"></div>
-                </div>
-                <div style="font-size:0.7rem;color:#8b949e;margin-top:2px;">/ 5.00</div>
+                <div class="metric-value" style="color:{color_hex[pred]}">{label_id[pred]}</div>
+                <div class="metric-label">Kategori Ketahanan</div>
+            </div>""", unsafe_allow_html=True)
+        with c2:
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{confidence:.1%}</div>
+                <div class="metric-label">Kepercayaan Model</div>
+            </div>""", unsafe_allow_html=True)
+        with c3:
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">{br_score:.2f}</div>
+                <div class="metric-label">Estimasi Skor BR (/ 5.0)</div>
+            </div>""", unsafe_allow_html=True)
+        with c4:
+            st.markdown(f"""<div class="metric-card">
+                <div class="metric-value">#{n_total}</div>
+                <div class="metric-label">Anda Responden ke-</div>
             </div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Recommendations ────────────────────────────────────
-    st.markdown("#### 💡 Rekomendasi Strategis")
-    recommendations = get_recommendations(result, scores)
-    for rec in recommendations:
-        st.markdown(f'<div class="rec-item">{rec}</div>', unsafe_allow_html=True)
+        # ── Charts ─────────────────────────────────────────────
+        col_chart1, col_chart2 = st.columns([3, 2])
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        with col_chart1:
+            st.markdown("#### 📈 Distribusi Probabilitas Kelas")
+            fig_prob = render_probability_chart(probs)
+            st.pyplot(fig_prob, use_container_width=True)
+            plt.close()
 
-    # ── Download result ────────────────────────────────────
-    st.markdown("#### 📥 Unduh Laporan")
-    result_df = pd.DataFrame([{
-        "UMKM": business_name,
-        "Provinsi": province,
-        "Kota": st.session_state.get("pred_city", ""),
-        "Sektor": business_sector,
-        "Prediksi": pred,
-        "Kategori": label_id[pred],
-        "Kepercayaan": f"{confidence:.1%}",
-        "Skor BR Estimasi": br_score,
-        **{score_labels.get(k, k): f"{v:.2f}" for k, v in scores.items()},
-        "Tanggal": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "Model": model_choice_display,
-    }])
-    csv_bytes = result_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
-    st.download_button(
-        label="📥 Download Hasil Prediksi (CSV)",
-        data=csv_bytes,
-        file_name=f"prediksi_{business_name.replace(' ','_')}_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
-        mime="text/csv",
-        use_container_width=True,
+            # Probability table
+            prob_data = {
+                "Kategori": ["🔴 Rendah (Low)", "🟡 Sedang (Medium)", "🟢 Tinggi (High)"],
+                "Probabilitas": [
+                    f"{probs.get('Low',0):.1%}",
+                    f"{probs.get('Medium',0):.1%}",
+                    f"{probs.get('High',0):.1%}",
+                ]
+            }
+            st.dataframe(pd.DataFrame(prob_data), hide_index=True, use_container_width=True)
+
+        with col_chart2:
+            st.markdown("#### 🕸️ Radar Kapabilitas UMKM")
+            fig_radar = render_radar_chart(scores)
+            st.pyplot(fig_radar, use_container_width=True)
+            plt.close()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Construct scores breakdown ─────────────────────────
+        st.markdown("#### 📊 Detail Skor Konstruk")
+        score_labels = {
+            "DigitalCapabilityScore":          "💻 Kapabilitas Digital",
+            "InnovationCapabilityScore":       "💡 Kemampuan Inovasi",
+            "EntrepreneurialOrientationScore": "🚀 Orientasi Kewirausahaan",
+            "OrganizationalAgilityScore":      "⚡ Agilitas Organisasi",
+            "ResourceAccessScore":             "💰 Akses Sumber Daya",
+            "EnvironmentalDynamismScore":      "🌍 Dinamika Lingkungan",
+            "BusinessResilienceScore":         "🛡️ Ketahanan Bisnis (Self)",
+        }
+        score_cols = st.columns(4)
+        for idx, (key, label) in enumerate(score_labels.items()):
+            val = scores.get(key, 0.0)
+            bar_w = int(val / 5.0 * 100)
+            bar_color = "#2ea043" if val >= 3.5 else ("#d29922" if val >= 2.5 else "#da3633")
+            with score_cols[idx % 4]:
+                st.markdown(f"""<div class="metric-card">
+                    <div style="font-size:0.78rem;color:#8b949e;margin-bottom:0.4rem">{label}</div>
+                    <div class="metric-value" style="color:{bar_color};font-size:1.5rem">{val:.2f}</div>
+                    <div style="background:#21262d;border-radius:4px;height:6px;margin-top:6px;">
+                        <div style="background:{bar_color};width:{bar_w}%;height:6px;border-radius:4px;"></div>
+                    </div>
+                    <div style="font-size:0.7rem;color:#8b949e;margin-top:2px;">/ 5.00</div>
+                </div>""", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Recommendations ────────────────────────────────────
+        st.markdown("#### 💡 Rekomendasi Strategis")
+        recommendations = get_recommendations(result, scores)
+        for rec in recommendations:
+            st.markdown(f'<div class="rec-item">{rec}</div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ── Download result ────────────────────────────────────
+        st.markdown("#### 📥 Unduh Laporan")
+        result_df = pd.DataFrame([{
+            "UMKM": business_name,
+            "Provinsi": province,
+            "Kota": st.session_state.get("pred_city", ""),
+            "Sektor": business_sector,
+            "Prediksi": pred,
+            "Kategori": label_id[pred],
+            "Kepercayaan": f"{confidence:.1%}",
+            "Skor BR Estimasi": br_score,
+            **{score_labels.get(k, k): f"{v:.2f}" for k, v in scores.items()},
+            "Tanggal": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "Model": model_choice_display,
+        }])
+        csv_bytes = result_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+        st.download_button(
+            label="📥 Download Hasil Prediksi (CSV)",
+            data=csv_bytes,
+            file_name=f"prediksi_{business_name.replace(' ','_')}_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+        st.success(f"✅ Data UMKM **{business_name}** berhasil disimpan sebagai responden ke-**{n_total}**. Terima kasih telah berkontribusi dalam penelitian ini!")
+
+        # ── GEMINI AI RECOMMENDATION ───────────────────────────
+        if GEMINI_MODULE_OK:
+            render_gemini_section(
+                business_name   = business_name,
+                business_sector = business_sector,
+                province        = province,
+                result          = result,
+                scores          = scores,
+                timestamp       = st.session_state.get("pred_timestamp"),
+            )
+        else:
+            st.markdown("---")
+            st.info("💡 **Tip:** Tambahkan API Key Gemini di file `.env` untuk mendapatkan rekomendasi AI yang lebih mendalam.")
+
+
+    # ══════════════════════════════════════════════════════════
+    # TAB 2: RIWAYAT SUBMISSION
+    # ══════════════════════════════════════════════════════════
+
+with tab_history:
+    import io as _io
+
+    st.markdown("## \U0001f4dc Riwayat Submission")
+    st.markdown(
+        "Lihat semua data yang telah disubmit, lengkap dengan "
+        "kolom yang diisi dan hasil prediksi AI."
     )
 
-    st.success(f"✅ Data UMKM **{business_name}** berhasil disimpan sebagai responden ke-**{n_total}**. Terima kasih telah berkontribusi dalam penelitian ini!")
+    log_path_hist = LOG_DIR / "submissions_log.csv"
 
-    # ── GEMINI AI RECOMMENDATION ───────────────────────────
-    if GEMINI_MODULE_OK:
-        render_gemini_section(
-            business_name   = business_name,
-            business_sector = business_sector,
-            province        = province,
-            result          = result,
-            scores          = scores,
+    if not log_path_hist.exists():
+        st.info(
+            "\U0001f4cb Belum ada data submission. "
+            "Silakan isi formulir prediksi terlebih dahulu."
         )
     else:
-        st.markdown("---")
-        st.info("💡 **Tip:** Tambahkan API Key Gemini di file `.env` untuk mendapatkan rekomendasi AI yang lebih mendalam.")
+        try:
+            df_hist = pd.read_csv(log_path_hist, encoding="utf-8-sig")
+        except Exception as _e:
+            st.error(f"\u274c Gagal membaca data history: {_e}")
+            df_hist = pd.DataFrame()
+
+        if df_hist.empty:
+            st.info("\U0001f4cb Belum ada data submission.")
+        else:
+            # Normalize Timestamp
+            if "Timestamp" in df_hist.columns:
+                df_hist["Timestamp"] = pd.to_datetime(
+                    df_hist["Timestamp"], errors="coerce"
+                )
+
+            n_total_hist = len(df_hist)
+
+            # ── Mini statistik ──────────────────────────────────
+            st.markdown("### \U0001f4ca Ringkasan Data")
+            sc1, sc2, sc3, sc4 = st.columns(4)
+            with sc1:
+                st.metric("\U0001f465 Total Responden", n_total_hist)
+            with sc2:
+                n_high = int(
+                    (df_hist["Predicted_Category"] == "High").sum()
+                ) if "Predicted_Category" in df_hist.columns else 0
+                st.metric("\U0001f7e2 Ketahanan Tinggi", n_high)
+            with sc3:
+                n_med = int(
+                    (df_hist["Predicted_Category"] == "Medium").sum()
+                ) if "Predicted_Category" in df_hist.columns else 0
+                st.metric("\U0001f7e1 Ketahanan Sedang", n_med)
+            with sc4:
+                n_low = int(
+                    (df_hist["Predicted_Category"] == "Low").sum()
+                ) if "Predicted_Category" in df_hist.columns else 0
+                st.metric("\U0001f534 Ketahanan Rendah", n_low)
+
+            # Distribution bar chart
+            if "Predicted_Category" in df_hist.columns and n_total_hist > 0:
+                _dist_df = (
+                    df_hist["Predicted_Category"]
+                    .value_counts()
+                    .reindex(["High", "Medium", "Low"], fill_value=0)
+                    .reset_index()
+                )
+                _dist_df.columns = ["Kategori", "Jumlah"]
+                _colors = [
+                    {"High": "#2ea043", "Medium": "#d29922", "Low": "#da3633"}.get(k, "#58a6ff")
+                    for k in _dist_df["Kategori"]
+                ]
+                fig_dist, ax_dist = plt.subplots(figsize=(5, 2.5))
+                fig_dist.patch.set_facecolor("#161b22")
+                ax_dist.set_facecolor("#1c2128")
+                _bars = ax_dist.bar(
+                    _dist_df["Kategori"], _dist_df["Jumlah"],
+                    color=_colors, edgecolor="#30363d", linewidth=0.5
+                )
+                for _bar, _val in zip(_bars, _dist_df["Jumlah"]):
+                    ax_dist.text(
+                        _bar.get_x() + _bar.get_width() / 2,
+                        _bar.get_height() + 0.1,
+                        str(_val), ha="center", va="bottom",
+                        color="#e6edf3", fontsize=10
+                    )
+                ax_dist.set_xlabel("Kategori Ketahanan", color="#8b949e", fontsize=9)
+                ax_dist.set_ylabel("Jumlah", color="#8b949e", fontsize=9)
+                ax_dist.tick_params(colors="#c9d1d9")
+                ax_dist.spines[:].set_visible(False)
+                ax_dist.set_title(
+                    "Distribusi Prediksi Ketahanan Bisnis",
+                    color="#e6edf3", fontsize=10, fontweight="bold"
+                )
+                plt.tight_layout()
+                _col_ch, _ = st.columns([2, 3])
+                with _col_ch:
+                    st.pyplot(fig_dist, use_container_width=True)
+                plt.close(fig_dist)
+
+            st.markdown("---")
+
+            # ── Filters ─────────────────────────────────────────
+            st.markdown("### \U0001f50d Filter Data")
+            f1, f2, f3, f4 = st.columns(4)
+
+            with f1:
+                _prov_opts = (
+                    ["Semua"] +
+                    sorted(df_hist["Province"].dropna().unique().tolist())
+                ) if "Province" in df_hist.columns else ["Semua"]
+                sel_prov = st.selectbox("Provinsi", _prov_opts, key="hist_prov")
+
+            with f2:
+                _sect_opts = (
+                    ["Semua"] +
+                    sorted(df_hist["Business_Sector"].dropna().unique().tolist())
+                ) if "Business_Sector" in df_hist.columns else ["Semua"]
+                sel_sect = st.selectbox("Sektor Usaha", _sect_opts, key="hist_sect")
+
+            with f3:
+                sel_cat = st.selectbox(
+                    "Kategori Prediksi",
+                    ["Semua", "High", "Medium", "Low"],
+                    key="hist_cat"
+                )
+
+            with f4:
+                _model_opts = (
+                    ["Semua"] +
+                    sorted(df_hist["Model_Used"].dropna().unique().tolist())
+                ) if "Model_Used" in df_hist.columns else ["Semua"]
+                sel_model = st.selectbox("Model AI", _model_opts, key="hist_model")
+
+            # Date filter
+            _date_range = None
+            if "Timestamp" in df_hist.columns and df_hist["Timestamp"].notna().any():
+                _min_d = df_hist["Timestamp"].min().date()
+                _max_d = df_hist["Timestamp"].max().date()
+                _date_range = st.date_input(
+                    "Rentang Tanggal Submission",
+                    value=(_min_d, _max_d),
+                    min_value=_min_d,
+                    max_value=_max_d,
+                    key="hist_date",
+                )
+
+            # Apply filters
+            df_filtered = df_hist.copy()
+            if sel_prov != "Semua" and "Province" in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered["Province"] == sel_prov]
+            if sel_sect != "Semua" and "Business_Sector" in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered["Business_Sector"] == sel_sect]
+            if sel_cat != "Semua" and "Predicted_Category" in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered["Predicted_Category"] == sel_cat]
+            if sel_model != "Semua" and "Model_Used" in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered["Model_Used"] == sel_model]
+            if _date_range and len(_date_range) == 2 and "Timestamp" in df_filtered.columns:
+                _s = pd.Timestamp(_date_range[0])
+                _e = pd.Timestamp(_date_range[1]) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+                df_filtered = df_filtered[
+                    (df_filtered["Timestamp"] >= _s) & (df_filtered["Timestamp"] <= _e)
+                ]
+
+            st.markdown(
+                f"**{len(df_filtered)} dari {n_total_hist} responden ditampilkan**"
+            )
+
+            # ── Tabel ringkas ────────────────────────────────────
+            st.markdown("### \U0001f4cb Tabel Riwayat")
+            _MAIN_COLS = [c for c in [
+                "Timestamp", "Business_Name", "Province", "City",
+                "Business_Sector", "Predicted_Category", "Confidence",
+                "BR_Score_Estimated", "Model_Used",
+            ] if c in df_filtered.columns]
+            df_disp = df_filtered[_MAIN_COLS].copy().reset_index(drop=True)
+            df_disp.index += 1
+            df_disp.index.name = "No"
+            if "Confidence" in df_disp.columns:
+                df_disp["Confidence"] = df_disp["Confidence"].apply(
+                    lambda x: f"{float(x):.1%}" if pd.notna(x) else "-"
+                )
+            if "Timestamp" in df_disp.columns:
+                df_disp["Timestamp"] = df_disp["Timestamp"].apply(
+                    lambda x: x.strftime("%Y-%m-%d %H:%M") if pd.notna(x) else "-"
+                )
+            st.dataframe(df_disp, use_container_width=True, height=350)
+
+            # ── Detail per baris ─────────────────────────────────
+            st.markdown("### \U0001f50e Detail Per Responden")
+            st.caption(
+                "Klik nama UMKM untuk melihat seluruh jawaban kuesioner "
+                "dan hasil prediksi lengkap."
+            )
+
+            _ITEM_Q = {
+                "DC1": "Menggunakan teknologi digital dalam operasional sehari-hari",
+                "DC2": "Memanfaatkan media digital untuk bisnis",
+                "DC3": "Menggunakan data digital untuk pengambilan keputusan",
+                "DC4": "Teknologi digital terintegrasi dalam proses bisnis",
+                "DC5": "Mampu mengadopsi teknologi digital baru dengan cepat",
+                "IC1": "Secara rutin mengembangkan produk/layanan baru",
+                "IC2": "Melakukan perbaikan proses operasional",
+                "IC3": "Menerapkan pemasaran yang baru dan kreatif",
+                "IC4": "Mampu menyesuaikan produk sesuai kebutuhan pelanggan",
+                "IC5": "Ide-ide baru dapat diterapkan dengan cepat",
+                "EO1": "Aktif mencari peluang usaha baru sebelum pesaing",
+                "EO2": "Berani mengambil risiko terukur untuk mengembangkan usaha",
+                "EO3": "Selalu berupaya menciptakan pembaruan dalam bisnis",
+                "EO4": "Aktif bersaing untuk meningkatkan posisi di pasar",
+                "EO5": "Memiliki kebebasan dalam mengambil keputusan strategis",
+                "OA1": "Mampu mendeteksi perubahan kebutuhan pasar dengan cepat",
+                "OA2": "Mampu mengambil keputusan bisnis cepat saat perubahan terjadi",
+                "OA3": "Dapat menyesuaikan proses bisnis dengan cepat",
+                "OA4": "Mampu mengalokasikan kembali sumber daya secara cepat",
+                "OA5": "Mampu merespons kebutuhan pelanggan dengan cepat",
+                "RA1": "Memiliki akses memadai terhadap sumber pembiayaan",
+                "RA2": "Memiliki SDM yang kompeten",
+                "RA3": "Memiliki akses stabil terhadap bahan baku",
+                "RA4": "Memiliki jaringan kerja sama bisnis yang mendukung",
+                "RA5": "Mudah memperoleh informasi kondisi pasar",
+                "ED1": "Permintaan pelanggan sering mengalami perubahan",
+                "ED2": "Tingkat persaingan berubah dengan cepat",
+                "ED3": "Perkembangan teknologi di sektor berlangsung cepat",
+                "ED4": "Kondisi ekonomi yang memengaruhi usaha sulit diprediksi",
+                "ED5": "Ketersediaan bahan baku sering mengalami perubahan",
+                "BR1": "Mampu mempertahankan operasional meskipun ada gangguan",
+                "BR2": "Mampu beradaptasi terhadap perubahan lingkungan bisnis",
+                "BR3": "Mampu pulih dengan cepat setelah gangguan usaha",
+                "BR4": "Mampu mempertahankan pelanggan dalam berbagai kondisi",
+                "BR5": "Mampu menjaga kestabilan pendapatan meski menghadapi tantangan",
+                "BR6": "Mampu memanfaatkan peluang bisnis baru setelah perubahan",
+                "BR7": "Memiliki kesiapan menghadapi berbagai risiko bisnis",
+            }
+            _LIKERT_MAP = {
+                1: "Sangat Tidak Setuju",
+                2: "Tidak Setuju",
+                3: "Netral",
+                4: "Setuju",
+                5: "Sangat Setuju",
+            }
+            _CONSTRUCT_LBL = {
+                "DigitalCapabilityScore":          "\U0001f4bb Kapabilitas Digital",
+                "InnovationCapabilityScore":       "\U0001f4a1 Kemampuan Inovasi",
+                "EntrepreneurialOrientationScore": "\U0001f680 Orientasi Kewirausahaan",
+                "OrganizationalAgilityScore":      "\u26a1 Agilitas Organisasi",
+                "ResourceAccessScore":             "\U0001f4b0 Akses Sumber Daya",
+                "EnvironmentalDynamismScore":      "\U0001f30d Dinamika Lingkungan",
+                "BusinessResilienceScore":         "\U0001f6e1\ufe0f Ketahanan Bisnis (Self)",
+            }
+            _LIKERT_SECTIONS = {
+                "Kapabilitas Digital (DC)":       ["DC1","DC2","DC3","DC4","DC5"],
+                "Kemampuan Inovasi (IC)":         ["IC1","IC2","IC3","IC4","IC5"],
+                "Orientasi Kewirausahaan (EO)":   ["EO1","EO2","EO3","EO4","EO5"],
+                "Agilitas Organisasi (OA)":       ["OA1","OA2","OA3","OA4","OA5"],
+                "Akses Sumber Daya (RA)":         ["RA1","RA2","RA3","RA4","RA5"],
+                "Dinamika Lingkungan (ED)":       ["ED1","ED2","ED3","ED4","ED5"],
+                "Ketahanan Bisnis Self (BR)":     ["BR1","BR2","BR3","BR4","BR5","BR6","BR7"],
+            }
+            _PROFILE_FIELDS = {
+                "Nama UMKM":            "Business_Name",
+                "Provinsi":             "Province",
+                "Kota":                 "City",
+                "Sektor":               "Business_Sector",
+                "Usia Usaha (th)":      "Business_Age",
+                "Jumlah Karyawan":      "Number_of_Employees",
+                "Omzet Tahunan":        "Annual_Revenue",
+                "Penjualan Digital (%)":"Digital_Sales_Percentage",
+                "Usia Pemilik":         "Owner_Age",
+                "Jenis Kelamin":        "Owner_Gender",
+                "Pendidikan":           "Education",
+                "Status Legalitas":     "Legal_Status",
+            }
+
+            _EMOJI_CAT = {"High": "\U0001f7e2", "Medium": "\U0001f7e1", "Low": "\U0001f534"}
+
+            for _i, (_, _row) in enumerate(df_filtered.iterrows(), start=1):
+                _bname   = _row.get("Business_Name", f"Responden #{_i}")
+                _ts      = _row.get("Timestamp", "")
+                _ts_str  = (
+                    _ts.strftime("%Y-%m-%d %H:%M")
+                    if pd.notna(_ts) and hasattr(_ts, "strftime")
+                    else str(_ts)
+                )
+                _pred    = _row.get("Predicted_Category", "-")
+                _ep      = _EMOJI_CAT.get(_pred, "\u2b1c")
+
+                with st.expander(
+                    f"{_i}. {_bname}  |  {_ts_str}  |  {_ep} {_pred}"
+                ):
+                    _d1, _d2 = st.columns(2)
+
+                    with _d1:
+                        st.markdown("**\U0001f3e2 Profil UMKM**")
+                        _prof_rows = [
+                            [lbl, str(_row.get(col, "-"))]
+                            for lbl, col in _PROFILE_FIELDS.items()
+                        ]
+                        st.dataframe(
+                            pd.DataFrame(_prof_rows, columns=["Aspek", "Nilai"]),
+                            hide_index=True, use_container_width=True
+                        )
+
+                    with _d2:
+                        st.markdown("**\U0001f4ca Hasil Prediksi AI**")
+                        _conf_raw = _row.get("Confidence", "-")
+                        try:
+                            _conf_str = f"{float(_conf_raw):.1%}"
+                        except (ValueError, TypeError):
+                            _conf_str = str(_conf_raw)
+                        _pred_rows = [
+                            ["Kategori Prediksi",     f"{_ep} {_pred}"],
+                            ["Kepercayaan Model",     _conf_str],
+                            ["BR Score Estimasi",     str(_row.get("BR_Score_Estimated", "-"))],
+                            ["Model yang Digunakan",  str(_row.get("Model_Used", "-"))],
+                        ]
+                        for _pk, _pc in [
+                            ("Prob_Low", "Probabilitas Low"),
+                            ("Prob_Medium", "Probabilitas Medium"),
+                            ("Prob_High", "Probabilitas High"),
+                        ]:
+                            if _pk in _row:
+                                try:
+                                    _pred_rows.append([_pc, f"{float(_row[_pk]):.1%}"])
+                                except (ValueError, TypeError):
+                                    _pred_rows.append([_pc, str(_row[_pk])])
+                        st.dataframe(
+                            pd.DataFrame(_pred_rows, columns=["Metrik", "Nilai"]),
+                            hide_index=True, use_container_width=True
+                        )
+
+                        # Construct scores
+                        st.markdown("**\U0001f4c8 Skor Konstruk**")
+                        _cs_rows = []
+                        for _ck, _cl in _CONSTRUCT_LBL.items():
+                            _cv = _row.get(_ck, "-")
+                            try:
+                                _cs_rows.append([_cl, f"{float(_cv):.3f}"])
+                            except (ValueError, TypeError):
+                                _cs_rows.append([_cl, str(_cv)])
+                        st.dataframe(
+                            pd.DataFrame(_cs_rows, columns=["Konstruk", "Skor (/ 5.0)"]),
+                            hide_index=True, use_container_width=True
+                        )
+
+                    # Likert table
+                    st.markdown("**\U0001f4dd Jawaban Kuesioner (37 Item Likert)**")
+                    _lrows = []
+                    for _sec, _items in _LIKERT_SECTIONS.items():
+                        for _item in _items:
+                            _raw = _row.get(_item, "-")
+                            try:
+                                _iv = int(float(_raw))
+                                _vstr = f"{_iv} \u2014 {_LIKERT_MAP.get(_iv, '-')}"
+                            except (ValueError, TypeError):
+                                _vstr = str(_raw)
+                            _lrows.append({
+                                "Seksi": _sec,
+                                "Kode": _item,
+                                "Pertanyaan": _ITEM_Q.get(_item, ""),
+                                "Jawaban": _vstr,
+                            })
+                    st.dataframe(
+                        pd.DataFrame(_lrows),
+                        hide_index=True, use_container_width=True, height=320
+                    )
+
+                    # Rekomendasi
+                    _ai_rec = _row.get("AI_Recommendation", "")
+                    if _ai_rec and str(_ai_rec) not in ["-", "nan", ""]:
+                        st.markdown("**\U0001f4a1 Rekomendasi Strategis**")
+                        for _ri in str(_ai_rec).split(" | "):
+                            if _ri.strip():
+                                st.markdown(
+                                    f'<div class="rec-item">{_ri.strip()}</div>',
+                                    unsafe_allow_html=True
+                                )
+
+                    # Download per-responden CSV
+                    _single_csv = pd.DataFrame([_row]).to_csv(
+                        index=False, encoding="utf-8-sig"
+                    ).encode("utf-8-sig")
+                    st.download_button(
+                        label="\U0001f4e5 Download data responden ini (CSV)",
+                        data=_single_csv,
+                        file_name=f"data_{str(_bname).replace(' ','_')}_{_ts_str[:10]}.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                        key=f"dl_single_{_i}",
+                    )
+
+            st.markdown("---")
+
+            # ── Download semua data ──────────────────────────────
+            st.markdown("### \U0001f4e5 Ekspor Semua Data History")
+            _dl1, _dl2 = st.columns(2)
+
+            with _dl1:
+                _csv_all = df_filtered.to_csv(
+                    index=False, encoding="utf-8-sig"
+                ).encode("utf-8-sig")
+                st.download_button(
+                    label="\U0001f4c4 Download CSV (Semua Kolom)",
+                    data=_csv_all,
+                    file_name=(
+                        "history_submissions_"
+                        + datetime.datetime.now().strftime("%Y%m%d_%H%M")
+                        + ".csv"
+                    ),
+                    mime="text/csv",
+                    use_container_width=True,
+                    key="dl_csv_all",
+                )
+
+            with _dl2:
+                try:
+                    _xbuf = _io.BytesIO()
+                    with pd.ExcelWriter(_xbuf, engine="openpyxl") as _xw:
+                        # Sheet 1: Ringkasan
+                        _sc = [c for c in [
+                            "Timestamp", "Business_Name", "Province", "City",
+                            "Business_Sector", "Business_Age", "Number_of_Employees",
+                            "Annual_Revenue", "Predicted_Category", "Confidence",
+                            "BR_Score_Estimated", "Model_Used",
+                            "DigitalCapabilityScore", "InnovationCapabilityScore",
+                            "EntrepreneurialOrientationScore", "OrganizationalAgilityScore",
+                            "ResourceAccessScore", "EnvironmentalDynamismScore",
+                            "BusinessResilienceScore",
+                            "Prob_Low", "Prob_Medium", "Prob_High",
+                        ] if c in df_filtered.columns]
+                        df_filtered[_sc].to_excel(
+                            _xw, sheet_name="Ringkasan", index=False
+                        )
+                        # Sheet 2: Item Likert
+                        _lc = [c for c in [
+                            "Timestamp", "Business_Name",
+                            "DC1","DC2","DC3","DC4","DC5",
+                            "IC1","IC2","IC3","IC4","IC5",
+                            "EO1","EO2","EO3","EO4","EO5",
+                            "OA1","OA2","OA3","OA4","OA5",
+                            "RA1","RA2","RA3","RA4","RA5",
+                            "ED1","ED2","ED3","ED4","ED5",
+                            "BR1","BR2","BR3","BR4","BR5","BR6","BR7",
+                        ] if c in df_filtered.columns]
+                        df_filtered[_lc].to_excel(
+                            _xw, sheet_name="Item Likert", index=False
+                        )
+                        # Sheet 3: Data Lengkap
+                        df_filtered.to_excel(
+                            _xw, sheet_name="Data Lengkap", index=False
+                        )
+                        # Sheet 4: Rekomendasi
+                        if "AI_Recommendation" in df_filtered.columns:
+                            _rc = [c for c in [
+                                "Timestamp", "Business_Name",
+                                "Predicted_Category", "AI_Recommendation"
+                            ] if c in df_filtered.columns]
+                            df_filtered[_rc].to_excel(
+                                _xw, sheet_name="Rekomendasi AI", index=False
+                            )
+                    _xbuf.seek(0)
+                    st.download_button(
+                        label="\U0001f4ca Download Excel (Multi-Sheet)",
+                        data=_xbuf.getvalue(),
+                        file_name=(
+                            "history_submissions_"
+                            + datetime.datetime.now().strftime("%Y%m%d_%H%M")
+                            + ".xlsx"
+                        ),
+                        mime=(
+                            "application/vnd.openxmlformats-officedocument"
+                            ".spreadsheetml.sheet"
+                        ),
+                        use_container_width=True,
+                        key="dl_xlsx_all",
+                    )
+                except ImportError:
+                    st.warning(
+                        "\u26a0\ufe0f Instal openpyxl untuk ekspor Excel: "
+                        "`pip install openpyxl`"
+                    )
 

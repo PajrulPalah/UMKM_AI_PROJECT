@@ -617,6 +617,7 @@ def render_gemini_section(
     scores: dict,
     indicators: dict = None,   # opsional: individual DC1-BR7
     profile: dict = None,      # opsional: profil lengkap bisnis
+    timestamp: str = None,     # waktu submit form untuk update ke CSV
 ):
     """
     Render tombol dan hasil rekomendasi Gemini di Streamlit.
@@ -692,6 +693,21 @@ def render_gemini_section(
         if gemini_result["success"]:
             st.session_state["gemini_result"] = gemini_result
             st.session_state["gemini_business_name"] = business_name
+            
+            # Update CSV history with Gemini recommendation
+            if timestamp:
+                log_path = Path("data/submissions/submissions_log.csv")
+                if log_path.exists():
+                    try:
+                        import pandas as pd
+                        df = pd.read_csv(log_path, encoding="utf-8-sig")
+                        mask = (df["Timestamp"] == timestamp) & (df["Business_Name"] == business_name)
+                        if mask.any():
+                            rec_clean = gemini_result["content"].replace("\n", " ").replace("|", " ")
+                            df.loc[mask, "AI_Recommendation"] = f"GEMINI AI: {rec_clean}"
+                            df.to_csv(log_path, index=False, encoding="utf-8-sig")
+                    except Exception as e:
+                        print(f"Error updating CSV with Gemini recommendation: {e}")
         else:
             st.session_state.pop("gemini_result", None)
             st.error(f"❌ Gagal mendapatkan rekomendasi: {gemini_result['error']}")
