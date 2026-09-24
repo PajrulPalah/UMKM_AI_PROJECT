@@ -283,16 +283,16 @@ def build_umkm_prompt_v2(
     profile_block = "\n".join([
         f"  Business Name      : {business_name}",
         f"  Province           : {province}",
-        f"  City               : {_p('city')}",
+        f"  City               : {_p('City')}",
         f"  Business Sector    : {business_sector}",
-        f"  Business Age       : {_p('business_age')} years",
-        f"  Number of Employees: {_p('num_employees')}",
-        f"  Annual Revenue     : {_p('annual_revenue')}",
-        f"  Digital Sales %    : {_p('digital_sales_pct')}",
-        f"  Owner Age          : {_p('owner_age')}",
-        f"  Owner Gender       : {_p('owner_gender')}",
-        f"  Education          : {_p('education')}",
-        f"  Legal Status       : {_p('legal_status')}",
+        f"  Business Age       : {_p('Business_Age')} years",
+        f"  Number of Employees: {_p('Number_of_Employees')}",
+        f"  Annual Revenue     : {_p('Annual_Revenue')}",
+        f"  Digital Sales %    : {_p('Digital_Sales_Percentage')}",
+        f"  Owner Age          : {_p('Owner_Age')}",
+        f"  Owner Gender       : {_p('Owner_Gender')}",
+        f"  Education          : {_p('Education')}",
+        f"  Legal Status       : {_p('Legal_Status')}",
     ])
 
     prompt = f"""
@@ -553,9 +553,9 @@ def get_gemini_recommendation(
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            model_name="gemini-3.5-flash",
+            model_name="gemini-2.5-flash",
             generation_config={
-                "temperature":       0.4,   # lebih rendah = lebih konsisten & faktual
+                "temperature":       0.2,   # lebih rendah = lebih konsisten & faktual
                 "top_p":             0.9,
                 "top_k":             40,
                 "max_output_tokens": 8192,
@@ -586,7 +586,7 @@ def get_gemini_recommendation(
             "success":        True,
             "content":        response.text,
             "error":          None,
-            "model":          "gemini-3.5.0-flash",
+            "model":          "gemini-2.5.0-flash",
             "prompt_version": PROMPT_VERSION,
         }
 
@@ -604,7 +604,7 @@ def get_gemini_recommendation(
             "success":        False,
             "content":        "",
             "error":          error_msg,
-            "model":          "gemini-3.5.0-flash",
+            "model":          "gemini-2.5.0-flash",
             "prompt_version": PROMPT_VERSION,
         }
 
@@ -657,7 +657,7 @@ def render_gemini_section(
         st.markdown(f"""
         <div style="background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.3);
                     border-radius:10px;padding:1rem;">
-            ✨ <strong>Powered by Google Gemini 3.5 Flash</strong>
+            ✨ <strong>Powered by Google Gemini Flash</strong>
             <span style="font-size:0.75rem;background:rgba(88,166,255,0.2);
                          border-radius:4px;padding:2px 6px;margin-left:6px;">Prompt {pv_badge}</span><br>
             <span style="font-size:0.85rem;color:#8b949e;">
@@ -721,7 +721,7 @@ def render_gemini_section(
         st.markdown(f"""
         <div style="background:rgba(46,160,67,0.08);border:1px solid rgba(46,160,67,0.3);
                     border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;">
-            ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini 2.0 Flash</strong>
+            ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini Flash</strong>
             <span style="font-size:0.75rem;background:rgba(46,160,67,0.2);
                          border-radius:4px;padding:2px 6px;margin-left:6px;">Prompt {pv}</span>
         </div>
