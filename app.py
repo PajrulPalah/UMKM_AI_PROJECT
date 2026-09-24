@@ -370,6 +370,155 @@ def predict_resilience(model, scaler, label_encoder, scores: dict) -> dict:
     }
 
 
+def _get_gspread_client():
+    """Buat gspread client dari st.secrets service_account. Return None jika tidak dikonfigurasi."""
+    try:
+        import gspread
+        from google.oauth2.service_account import Credentials
+
+        sa = st.secrets.get("connections", {}).get("gsheets", {}).get("service_account")
+        spreadsheet_url = st.secrets.get("connections", {}).get("gsheets", {}).get("spreadsheet")
+        if not sa or not spreadsheet_url:
+            return None, None
+
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive",
+        ]
+        creds = Credentials.from_service_account_info(dict(sa), scopes=scopes)
+        client = gspread.authorize(creds)
+        return client, spreadsheet_url
+    except Exception as e:
+        print(f"[GSheets] Gagal membuat client: {e}")
+        return None, None
+
+
+def _ensure_sheet(spreadsheet, name: str, headers: list):
+    """Pastikan worksheet dengan nama `name` ada. Jika tidak, buat dan tulis header."""
+    try:
+        ws = spreadsheet.worksheet(name)
+    except Exception:
+        ws = spreadsheet.add_worksheet(title=name, rows=2000, cols=len(headers) + 5)
+        ws.append_row(headers, value_input_option="USER_ENTERED")
+    return ws
+
+
+def _sync_to_gsheets(row: dict, profile: dict, responses: dict, scores: dict,
+                     result: dict, recommendations: list, timestamp: str):
+    """
+    Tulis submission ke 4 sheet Google Spreadsheet:
+      1. Ringkasan       — profil + hasil prediksi ringkas
+      2. Item Likert     — semua jawaban Likert DC1-BR7
+      3. Data Lengkap    — semua kolom (identik dengan CSV log)
+      4. Rekomendasi AI  — kolom khusus rekomendasi rule-based
+    """
+    client, spreadsheet_url = _get_gspread_client()
+    if client is None:
+        return  # Konfigurasi belum ada, lewati
+
+    try:
+        import gspread
+        sh = client.open_by_url(spreadsheet_url)
+    except Exception as e:
+        print(f"[GSheets] Gagal membuka spreadsheet: {e}")
+        return
+
+    probs = result.get("probabilities", {})
+
+    # ── 1. SHEET: Ringkasan ────────────────────────────────────────────────────
+    try:
+        headers_ringkasan = [
+            "Timestamp", "Nama_UMKM", "Provinsi", "Kota", "Sektor_Usaha",
+            "Usia_Usaha", "Jumlah_Karyawan", "Omzet_Tahunan", "Penjualan_Digital_%",
+            "Usia_Pemilik", "Gender_Pemilik", "Pendidikan", "Status_Legalitas",
+            "Prediksi_Ketahanan", "Confidence", "BR_Score",
+            "Prob_Low", "Prob_Medium", "Prob_High",
+            "DC_Score", "IC_Score", "EO_Score", "OA_Score", "RA_Score", "ED_Score", "BR_SelfAssess"
+        ]
+        ws1 = _ensure_sheet(sh, "Ringkasan", headers_ringkasan)
+        ws1.append_row([
+            timestamp,
+            profile.get("Business_Name", ""),
+            profile.get("Province", ""),
+            profile.get("City", ""),
+            profile.get("Business_Sector", ""),
+            profile.get("Business_Age", ""),
+            profile.get("Number_of_Employees", ""),
+            profile.get("Annual_Revenue", ""),
+            profile.get("Digital_Sales_Percentage", ""),
+            profile.get("Owner_Age", ""),
+            profile.get("Owner_Gender", ""),
+            profile.get("Education", ""),
+            profile.get("Legal_Status", ""),
+            result.get("predicted_class", ""),
+            round(result.get("confidence", 0) * 100, 1),
+            result.get("br_score", ""),
+            round(probs.get("Low", 0) * 100, 1),
+            round(probs.get("Medium", 0) * 100, 1),
+            round(probs.get("High", 0) * 100, 1),
+            scores.get("DigitalCapabilityScore", ""),
+            scores.get("InnovationCapabilityScore", ""),
+            scores.get("EntrepreneurialOrientationScore", ""),
+            scores.get("OrganizationalAgilityScore", ""),
+            scores.get("ResourceAccessScore", ""),
+            scores.get("EnvironmentalDynamismScore", ""),
+            scores.get("BusinessResilienceScore", ""),
+        ], value_input_option="USER_ENTERED")
+    except Exception as e:
+        print(f"[GSheets] Gagal update sheet Ringkasan: {e}")
+
+    # ── 2. SHEET: Item Likert ──────────────────────────────────────────────────
+    try:
+        likert_codes = [
+            "DC1","DC2","DC3","DC4","DC5",
+            "IC1","IC2","IC3","IC4","IC5",
+            "EO1","EO2","EO3","EO4","EO5",
+            "OA1","OA2","OA3","OA4","OA5",
+            "RA1","RA2","RA3","RA4","RA5",
+            "ED1","ED2","ED3","ED4","ED5",
+            "BR1","BR2","BR3","BR4","BR5","BR6","BR7",
+        ]
+        headers_likert = ["Timestamp", "Nama_UMKM"] + likert_codes
+        ws2 = _ensure_sheet(sh, "Item Likert", headers_likert)
+        ws2.append_row(
+            [timestamp, profile.get("Business_Name", "")] + [responses.get(c, "") for c in likert_codes],
+            value_input_option="USER_ENTERED"
+        )
+    except Exception as e:
+        print(f"[GSheets] Gagal update sheet Item Likert: {e}")
+
+    # ── 3. SHEET: Data Lengkap ─────────────────────────────────────────────────
+    try:
+        all_keys = list(row.keys())
+        ws3 = _ensure_sheet(sh, "Data Lengkap", all_keys)
+        ws3.append_row([str(row.get(k, "")) for k in all_keys], value_input_option="USER_ENTERED")
+    except Exception as e:
+        print(f"[GSheets] Gagal update sheet Data Lengkap: {e}")
+
+    # ── 4. SHEET: Rekomendasi AI ───────────────────────────────────────────────
+    try:
+        headers_rec = ["Timestamp", "Nama_UMKM", "Provinsi", "Sektor", "Prediksi", "Rekomendasi_1",
+                       "Rekomendasi_2", "Rekomendasi_3", "Rekomendasi_4", "Rekomendasi_5"]
+        ws4 = _ensure_sheet(sh, "Rekomendasi AI", headers_rec)
+        recs = recommendations or []
+        ws4.append_row([
+            timestamp,
+            profile.get("Business_Name", ""),
+            profile.get("Province", ""),
+            profile.get("Business_Sector", ""),
+            result.get("predicted_class", ""),
+            recs[0] if len(recs) > 0 else "",
+            recs[1] if len(recs) > 1 else "",
+            recs[2] if len(recs) > 2 else "",
+            recs[3] if len(recs) > 3 else "",
+            recs[4] if len(recs) > 4 else "",
+        ], value_input_option="USER_ENTERED")
+    except Exception as e:
+        print(f"[GSheets] Gagal update sheet Rekomendasi AI: {e}")
+
+    print(f"[GSheets] ✅ Submission '{profile.get('Business_Name','')}' berhasil disimpan ke 4 sheet.")
+
+
 def save_submission(
     profile: dict,
     responses: dict,
@@ -413,30 +562,8 @@ def save_submission(
     else:
         df_row.to_csv(log_path, mode="w", header=True, index=False, encoding="utf-8-sig")
 
-    # -- OPSI SIMPAN KE GOOGLE SHEETS --
-    # Fitur ini akan aktif jika terdapat konfigurasi [connections.gsheets] di .streamlit/secrets.toml
-    try:
-        if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-            from streamlit_gsheets import GSheetsConnection
-            conn = st.connection("gsheets", type=GSheetsConnection)
-            
-            try:
-                # Baca sheet yang ada (bisa kosong)
-                existing_data = conn.read(ttl=0)
-                if existing_data is not None and not existing_data.empty:
-                    # Pastikan kita menghapus baris kosong yang mungkin ada dari format bawaan gsheets
-                    existing_data = existing_data.dropna(how="all")
-                    updated_data = pd.concat([existing_data, df_row], ignore_index=True)
-                else:
-                    updated_data = df_row
-                
-                # Update ke GSheets
-                conn.update(data=updated_data)
-            except Exception as e:
-                print(f"Gagal membaca/menulis ke GSheets: {e}")
-    except Exception:
-        # Rahasia (secrets) belum dikonfigurasi, lewati.
-        pass
+    # -- SIMPAN KE GOOGLE SHEETS (4 sheet terpisah via gspread) --
+    _sync_to_gsheets(row, profile, responses, scores, result, recommendations, now)
 
     return log_path, now
 
