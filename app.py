@@ -413,6 +413,31 @@ def save_submission(
     else:
         df_row.to_csv(log_path, mode="w", header=True, index=False, encoding="utf-8-sig")
 
+    # -- OPSI SIMPAN KE GOOGLE SHEETS --
+    # Fitur ini akan aktif jika terdapat konfigurasi [connections.gsheets] di .streamlit/secrets.toml
+    try:
+        if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+            from streamlit_gsheets import GSheetsConnection
+            conn = st.connection("gsheets", type=GSheetsConnection)
+            
+            try:
+                # Baca sheet yang ada (bisa kosong)
+                existing_data = conn.read(ttl=0)
+                if existing_data is not None and not existing_data.empty:
+                    # Pastikan kita menghapus baris kosong yang mungkin ada dari format bawaan gsheets
+                    existing_data = existing_data.dropna(how="all")
+                    updated_data = pd.concat([existing_data, df_row], ignore_index=True)
+                else:
+                    updated_data = df_row
+                
+                # Update ke GSheets
+                conn.update(data=updated_data)
+            except Exception as e:
+                print(f"Gagal membaca/menulis ke GSheets: {e}")
+    except Exception:
+        # Rahasia (secrets) belum dikonfigurasi, lewati.
+        pass
+
     return log_path, now
 
 
@@ -996,6 +1021,8 @@ with tab_form:
         st.session_state["pred_model_choice"] = model_choice
         st.session_state["pred_n_total"] = n_total
         st.session_state["pred_timestamp"] = now
+        st.session_state["pred_indicators"] = responses
+        st.session_state["pred_profile"] = profile
 
         # Auto-retrain check
         if n_total > 0 and n_total % 10 == 0:
@@ -1170,6 +1197,8 @@ with tab_form:
                 province        = province,
                 result          = result,
                 scores          = scores,
+                indicators      = st.session_state.get("pred_indicators"),
+                profile         = st.session_state.get("pred_profile"),
                 timestamp       = st.session_state.get("pred_timestamp"),
             )
         else:

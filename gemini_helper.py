@@ -550,63 +550,84 @@ def get_gemini_recommendation(
             "model": None,
         }
 
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            generation_config={
-                "temperature":       0.2,   # lebih rendah = lebih konsisten & faktual
-                "top_p":             0.9,
-                "top_k":             40,
-                "max_output_tokens": 8192,
-            },
-            safety_settings=[
-                {"category": "HARM_CATEGORY_HARASSMENT",        "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH",       "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
-        )
+    genai.configure(api_key=api_key)
+    
+    prompt = build_umkm_prompt(
+        business_name=business_name,
+        business_sector=business_sector,
+        province=province,
+        predicted_class=predicted_class,
+        confidence=confidence,
+        br_score=br_score,
+        scores=scores,
+        probabilities=probabilities,
+        indicators=indicators,
+        profile=profile,
+    )
 
-        prompt = build_umkm_prompt(
-            business_name=business_name,
-            business_sector=business_sector,
-            province=province,
-            predicted_class=predicted_class,
-            confidence=confidence,
-            br_score=br_score,
-            scores=scores,
-            probabilities=probabilities,
-            indicators=indicators,
-            profile=profile,
-        )
+    models_to_try = [
+        "gemini-3.6-flash",
+        "gemini-1.5-flash", 
+        "gemini-2.5-flash",
+        "gemini-3.5-flash",
+        "gemini-pro"
+    ]
 
-        response = model.generate_content(prompt)
-        return {
-            "success":        True,
-            "content":        response.text,
-            "error":          None,
-            "model":          "gemini-2.5.0-flash",
-            "prompt_version": PROMPT_VERSION,
-        }
+    last_error_msg = ""
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                generation_config={
+                    "temperature":       0.2,   # lebih rendah = lebih konsisten & faktual
+                    "top_p":             0.9,
+                    "top_k":             40,
+                    "max_output_tokens": 8192,
+                },
+                safety_settings=[
+                    {"category": "HARM_CATEGORY_HARASSMENT",        "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_HATE_SPEECH",       "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+                ]
+            )
 
-    except Exception as e:
-        error_msg = str(e)
-        # User-friendly error messages
-        if "API_KEY_INVALID" in error_msg or "API key not valid" in error_msg:
-            error_msg = "API Key tidak valid. Periksa kembali API Key Anda di file .env"
-        elif "quota" in error_msg.lower():
-            error_msg = "Quota API Gemini habis. Coba lagi dalam beberapa menit."
-        elif "network" in error_msg.lower() or "connection" in error_msg.lower():
-            error_msg = "Tidak dapat terhubung ke Gemini. Periksa koneksi internet Anda."
+            response = model.generate_content(prompt)
+            return {
+                "success":        True,
+                "content":        response.text,
+                "error":          None,
+                "model":          model_name,
+                "prompt_version": PROMPT_VERSION,
+            }
+        except Exception as e:
+            error_msg = str(e)
+            last_error_msg = error_msg
+            # Jika error berkaitan dengan ketersediaan model (404 / 403), coba model berikutnya
+            if "404" in error_msg or "not found" in error_msg.lower() or "no longer available" in error_msg.lower():
+                continue
+            # Jika error API Key, kuota, atau jaringan, langsung berhenti dan laporkan
+            elif "API_KEY_INVALID" in error_msg or "API key not valid" in error_msg:
+                last_error_msg = "API Key tidak valid. Periksa kembali API Key Anda di file .env"
+                break
+            elif "quota" in error_msg.lower():
+                last_error_msg = "Quota API Gemini habis. Coba lagi dalam beberapa menit."
+                break
+            elif "network" in error_msg.lower() or "connection" in error_msg.lower():
+                last_error_msg = "Tidak dapat terhubung ke Gemini. Periksa koneksi internet Anda."
+                break
+            else:
+                # Error tak terduga lainnya, tetap coba model berikutnya untuk jaga-jaga
+                continue
 
-        return {
-            "success":        False,
-            "content":        "",
-            "error":          error_msg,
-            "model":          "gemini-2.5.0-flash",
-            "prompt_version": PROMPT_VERSION,
-        }
+    # Jika semua model gagal, kembalikan pesan error terakhir
+    return {
+        "success":        False,
+        "content":        "",
+        "error":          last_error_msg,
+        "model":          None,
+        "prompt_version": PROMPT_VERSION,
+    }
 
 
 def render_gemini_section(
@@ -717,11 +738,12 @@ def render_gemini_section(
         saved      = st.session_state["gemini_result"]
         saved_name = st.session_state.get("gemini_business_name", business_name)
         pv         = saved.get("prompt_version", "v2")
+        model_used = saved.get("model", "Gemini Flash")
 
         st.markdown(f"""
         <div style="background:rgba(46,160,67,0.08);border:1px solid rgba(46,160,67,0.3);
                     border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;">
-            ✅ <strong>Rekomendasi berhasil digenerate oleh Gemini Flash</strong>
+            ✅ <strong>Rekomendasi berhasil digenerate oleh {model_used.title()}</strong>
             <span style="font-size:0.75rem;background:rgba(46,160,67,0.2);
                          border-radius:4px;padding:2px 6px;margin-left:6px;">Prompt {pv}</span>
         </div>
