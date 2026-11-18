@@ -692,7 +692,7 @@ def render_gemini_section(
         generate_btn = st.button(
             "✨ Generate\nRekomendasi AI",
             key="gemini_btn",
-            use_container_width=True,
+            width='stretch',
             help="Klik untuk mendapatkan analisis mendalam dari Google Gemini AI"
         )
 
@@ -765,6 +765,6 @@ def render_gemini_section(
             data=saved["content"].encode("utf-8"),
             file_name=f"rekomendasi_gemini_{pv}_{saved_name.replace(' ','_')}.txt",
             mime="text/plain",
-            use_container_width=True,
+            width='stretch',
             key="download_gemini_btn",
         )

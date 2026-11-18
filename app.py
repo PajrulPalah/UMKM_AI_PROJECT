@@ -1056,7 +1056,7 @@ with tab_form:
 
         submitted = st.form_submit_button(
             "🔮 GENERATE PREDIKSI KETAHANAN BISNIS SAYA",
-            use_container_width=True
+            width='stretch'
         )
 
 
@@ -1311,7 +1311,7 @@ with tab_form:
             data=csv_bytes,
             file_name=f"prediksi_{business_name.replace(' ','_')}_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width='stretch',
         )
 
         st.success(f"✅ Data UMKM **{business_name}** berhasil disimpan sebagai responden ke-**{n_total}**. Terima kasih telah berkontribusi dalam penelitian ini!")
@@ -1720,7 +1720,7 @@ with tab_history:
                         data=_single_csv,
                         file_name=f"data_{str(_bname).replace(' ','_')}_{_ts_str[:10]}.csv",
                         mime="text/csv",
-                        use_container_width=True,
+                        width='stretch',
                         key=f"dl_single_{_i}",
                     )
 
@@ -1743,7 +1743,7 @@ with tab_history:
                         + ".csv"
                     ),
                     mime="text/csv",
-                    use_container_width=True,
+                    width='stretch',
                     key="dl_csv_all",
                 )
 
@@ -1806,7 +1806,7 @@ with tab_history:
                             "application/vnd.openxmlformats-officedocument"
                             ".spreadsheetml.sheet"
                         ),
-                        use_container_width=True,
+                        width='stretch',
                         key="dl_xlsx_all",
                     )
                 except ImportError:
