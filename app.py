@@ -385,8 +385,12 @@ def _get_gspread_client():
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive",
         ]
-        creds = Credentials.from_service_account_info(dict(sa), scopes=scopes)
-        client = gspread.authorize(creds)
+        # Deep-convert AttrDict dari st.secrets ke plain dict
+        import json as _json
+        sa_dict = _json.loads(_json.dumps(dict(sa)))
+        creds = Credentials.from_service_account_info(sa_dict, scopes=scopes)
+        # gspread 6.x: gspread.authorize() sudah dihapus, pakai gspread.Client()
+        client = gspread.Client(auth=creds)
         return client, spreadsheet_url
     except Exception as e:
         print(f"[GSheets] Gagal membuat client: {e}")
