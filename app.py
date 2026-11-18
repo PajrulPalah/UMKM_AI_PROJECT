@@ -1232,7 +1232,7 @@ with tab_form:
         with col_chart1:
             st.markdown("#### 📈 Distribusi Probabilitas Kelas")
             fig_prob = render_probability_chart(probs)
-            st.pyplot(fig_prob, use_container_width=True)
+            st.pyplot(fig_prob)
             plt.close()
 
             # Probability table
@@ -1244,12 +1244,12 @@ with tab_form:
                     f"{probs.get('High',0):.1%}",
                 ]
             }
-            st.dataframe(pd.DataFrame(prob_data), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(prob_data), hide_index=True)
 
         with col_chart2:
             st.markdown("#### 🕸️ Radar Kapabilitas UMKM")
             fig_radar = render_radar_chart(scores)
-            st.pyplot(fig_radar, use_container_width=True)
+            st.pyplot(fig_radar)
             plt.close()
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -1430,7 +1430,7 @@ with tab_history:
                 plt.tight_layout()
                 _col_ch, _ = st.columns([2, 3])
                 with _col_ch:
-                    st.pyplot(fig_dist, use_container_width=True)
+                    st.pyplot(fig_dist)
                 plt.close(fig_dist)
 
             st.markdown("---")
@@ -1519,7 +1519,7 @@ with tab_history:
                 df_disp["Timestamp"] = df_disp["Timestamp"].apply(
                     lambda x: x.strftime("%Y-%m-%d %H:%M") if pd.notna(x) else "-"
                 )
-            st.dataframe(df_disp, use_container_width=True, height=350)
+            st.dataframe(df_disp, height=350)
 
             # ── Detail per baris ─────────────────────────────────
             st.markdown("### \U0001f50e Detail Per Responden")
@@ -1633,7 +1633,7 @@ with tab_history:
                         ]
                         st.dataframe(
                             pd.DataFrame(_prof_rows, columns=["Aspek", "Nilai"]),
-                            hide_index=True, use_container_width=True
+                            hide_index=True
                         )
 
                     with _d2:
@@ -1661,7 +1661,7 @@ with tab_history:
                                     _pred_rows.append([_pc, str(_row[_pk])])
                         st.dataframe(
                             pd.DataFrame(_pred_rows, columns=["Metrik", "Nilai"]),
-                            hide_index=True, use_container_width=True
+                            hide_index=True
                         )
 
                         # Construct scores
@@ -1675,7 +1675,7 @@ with tab_history:
                                 _cs_rows.append([_cl, str(_cv)])
                         st.dataframe(
                             pd.DataFrame(_cs_rows, columns=["Konstruk", "Skor (/ 5.0)"]),
-                            hide_index=True, use_container_width=True
+                            hide_index=True
                         )
 
                     # Likert table
@@ -1697,7 +1697,7 @@ with tab_history:
                             })
                     st.dataframe(
                         pd.DataFrame(_lrows),
-                        hide_index=True, use_container_width=True, height=320
+                        hide_index=True, height=320
                     )
 
                     # Rekomendasi
